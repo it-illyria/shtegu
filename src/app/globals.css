@@ -1,26 +1,212 @@
 @import "tailwindcss";
 
+/* ─── Light tokens (default) ─────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background:     #F6F7F4;
+  --card-bg:        #FFFFFF;
+  --card-border:    #E4E8E0;
+  --surface-inset:  #EFF1EC;
+  --hover-overlay:  rgba(27,31,29,0.03);
+
+  --text-primary:   #1B1F1D;
+  --text-muted:     #6B7A6E;
+  --text-nav:       #4A5E50;
+  --foreground:     #1B1F1D;
+
+  --summit-green:   #2F4F3A;
+  --accent:         #E68A2E;
+  --ember:          #C0392B;
+
+  --btn-primary:       #2F4F3A;
+  --btn-primary-hover: #264433;
+  --btn-primary-text:  #ffffff;
+
+  --input-bg:     #ffffff;
+  --input-border: #CDD4CA;
+  --input-text:   #1B1F1D;
+
+  --success-bg:     #f0faf4;
+  --success-border: #86efac;
+  --success-text:   #14532d;
+
+  --warning-bg:     #fff8f0;
+  --warning-border: #f5c07a;
+  --warning-text:   #7a3d08;
+
+  --danger-bg:      #fef2f2;
+  --danger-border:  #fca5a5;
+  --danger-text:    #991b1b;
+
+  --chart-line:     #2F4F3A;
+  --overlay-bg:     rgba(239,241,236,0.93);
+  --overlay-text:   #1B1F1D;
+  --overlay-border: rgba(27,31,29,0.10);
+
+  --star-active:    #E68A2E;
+  --star-empty:     #CDD4CA;
+
+  --badge-guest-bg:   #E0E5DC;
+  --badge-guest-text: #6B7A6E;
+
+  --badge-easy:     #6BA368;
+  --badge-moderate: #D9A441;
+  --badge-hard:     #C96B4B;
+  --badge-expert:   #8A3E3E;
+
+  --sidebar-bg:          #102019;
+  --sidebar-text:        #C8CEC7;
+  --sidebar-muted:       #8C938D;
+  --sidebar-active-from: #3F6B46;
+  --sidebar-active-to:   #2F4F3A;
+  --sidebar-border:      rgba(255,255,255,0.06);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* ─── Dark tokens ────────────────────────────────────────────────────────── */
+/* Applied when: system prefers dark (and user hasn't forced light)
+   OR user has manually set data-theme="dark"                                */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:not([data-theme="light"]) {
+    --background:     #0C0E0D;
+    --card-bg:        #161A17;
+    --card-border:    #242B26;
+    --surface-inset:  #111410;
+    --hover-overlay:  rgba(236,242,237,0.04);
+    --foreground:     #EDF2EE;
+    --text-primary:   #EDF2EE;
+    --text-muted:     #8FA393;
+    --text-nav:       #95A89A;
+    --btn-primary:       #3E6B50;
+    --btn-primary-hover: #366047;
+    --accent:            #E68A2E;
+    --input-bg:     #141714;
+    --input-border: #2A3028;
+    --input-text:   #EDF2EE;
+    --success-bg:     rgba(47,79,58,0.16);
+    --success-border: rgba(47,79,58,0.42);
+    --success-text:   #86efac;
+    --warning-bg:     rgba(230,138,46,0.14);
+    --warning-border: rgba(230,138,46,0.40);
+    --warning-text:   #f5c07a;
+    --danger-bg:      rgba(192,57,43,0.14);
+    --danger-border:  rgba(192,57,43,0.40);
+    --danger-text:    #fca5a5;
+    --chart-line:     #4AAF80;
+    --overlay-bg:     rgba(22,26,23,0.93);
+    --overlay-text:   #EDF2EE;
+    --overlay-border: rgba(236,242,237,0.12);
+    --star-active:    #E68A2E;
+    --star-empty:     #313830;
+    --badge-guest-bg:   #212622;
+    --badge-guest-text: #8FA393;
+    --badge-easy:     #6BA368;
+    --badge-moderate: #D9A441;
+    --badge-hard:     #C96B4B;
+    --badge-expert:   #8A3E3E;
   }
 }
 
+:root[data-theme="dark"] {
+  --background:     #0E1110;
+  --card-bg:        #181D19;
+  --card-border:    #252C27;
+  --surface-inset:  #131714;
+  --hover-overlay:  rgba(236,242,237,0.04);
+  --foreground:     #EDF2EE;
+  --text-primary:   #EDF2EE;
+  --text-muted:     #8FA393;
+  --text-nav:       #95A89A;
+  --btn-primary:       #3E6B50;
+  --btn-primary-hover: #366047;
+  --accent:            #E68A2E;
+  --input-bg:     #141714;
+  --input-border: #2A3028;
+  --input-text:   #EDF2EE;
+  --success-bg:     rgba(47,79,58,0.16);
+  --success-border: rgba(47,79,58,0.42);
+  --success-text:   #86efac;
+  --warning-bg:     rgba(230,138,46,0.14);
+  --warning-border: rgba(230,138,46,0.40);
+  --warning-text:   #f5c07a;
+  --danger-bg:      rgba(192,57,43,0.14);
+  --danger-border:  rgba(192,57,43,0.40);
+  --danger-text:    #fca5a5;
+  --chart-line:     #4AAF80;
+  --overlay-bg:     rgba(20,25,22,0.93);
+  --overlay-text:   #EDF2EE;
+  --overlay-border: rgba(236,242,237,0.12);
+  --star-active:    #E68A2E;
+  --star-empty:     #313830;
+  --badge-guest-bg:   #1E2420;
+  --badge-guest-text: #8FA393;
+  --badge-easy:     #6BA368;
+  --badge-moderate: #D9A441;
+  --badge-hard:     #C96B4B;
+  --badge-expert:   #8A3E3E;
+}
+
+/* ─── Tailwind theme mapping ─────────────────────────────────────────────── */
+/* Maps both the project's custom tokens AND shadcn's expected color names    */
+@theme inline {
+  /* Project tokens */
+  --color-background:   var(--background);
+  --color-foreground:   var(--foreground);
+  --color-card-bg:      var(--card-bg);
+  --color-card-border:  var(--card-border);
+  --color-summit-green: var(--summit-green);
+  --color-accent:       var(--accent);
+  --color-ember:        var(--ember);
+  --font-sans:    var(--font-source-sans);
+  --font-heading: var(--font-inter);
+  --font-display: var(--font-fraunces);
+
+  /* shadcn/ui color aliases */
+  --color-card:                 var(--card-bg);
+  --color-card-foreground:      var(--text-primary);
+  --color-popover:              var(--card-bg);
+  --color-popover-foreground:   var(--text-primary);
+  --color-primary:              var(--btn-primary);
+  --color-primary-foreground:   var(--btn-primary-text);
+  --color-secondary:            var(--surface-inset);
+  --color-secondary-foreground: var(--text-primary);
+  --color-muted:                var(--surface-inset);
+  --color-muted-foreground:     var(--text-muted);
+  --color-accent:               var(--surface-inset);
+  --color-accent-foreground:    var(--text-primary);
+  --color-destructive:          var(--danger-text);
+  --color-border:               var(--card-border);
+  --color-input:                var(--input-border);
+  --color-ring:                 var(--btn-primary);
+
+  /* shadcn border-radius token */
+  --radius: 0.625rem;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
 body {
-  background: var(--background);
+  background-color: var(--background);
+  /* Subtle radial glows: summit-green from top-right, ember from bottom-left */
+  background-image:
+    radial-gradient(ellipse at 68% 0%,   rgba(47,79,58,0.10) 0%, transparent 52%),
+    radial-gradient(ellipse at 10% 100%, rgba(230,138,46,0.05) 0%, transparent 44%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-source-sans), var(--font-inter), system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-weight: 600;
+}
+
+/* Slightly stronger glows in dark mode for better depth */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body {
+    background-image:
+      radial-gradient(ellipse at 68% 0%,   rgba(62,107,80,0.16) 0%, transparent 52%),
+      radial-gradient(ellipse at 10% 100%, rgba(230,138,46,0.08) 0%, transparent 44%);
+  }
+}
+:root[data-theme="dark"] body {
+  background-image:
+    radial-gradient(ellipse at 68% 0%,   rgba(62,107,80,0.16) 0%, transparent 52%),
+    radial-gradient(ellipse at 10% 100%, rgba(230,138,46,0.08) 0%, transparent 44%);
 }

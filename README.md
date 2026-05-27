@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Shtegu 🏔️
 
-## Getting Started
+A Progressive Web App for hiking in Albania — discover trails, plan logistics,
+read community reviews, and navigate on-trail (online or off).
 
-First, run the development server:
+> **Shteg** (def. *shtegu*) — Albanian for "path" / "trail".
+
+## Stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router) + TypeScript + Tailwind v4 |
+| Maps | MapLibre GL JS (raster OSM today → PMTiles vector for offline) |
+| Backend | Supabase (Postgres + PostGIS + Auth + Storage) |
+| Offline | Web App Manifest + service worker (`public/sw.js`) |
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev      # http://localhost:3005
+npm run build    # production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app works out of the box with **local seed data** ([src/data/trails.ts](src/data/trails.ts)).
+Supabase is optional until you wire it up.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Enabling Supabase
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Full walkthrough in [docs/SETUP-SUPABASE.md](docs/SETUP-SUPABASE.md). Short version:
+run [supabase/schema.sql](supabase/schema.sql), enable anonymous sign-ins, then
+put your URL + keys in `.env.local`. Without keys the app falls back to seed data.
 
-## Learn More
+### Loading real trail data (OpenStreetMap)
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+node scripts/import-osm.mjs            # → data/osm-trails.json (215+ routes)
+node scripts/import-osm.mjs --push     # upsert into Supabase
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## What's built
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Trail discovery** — list + detail pages with **search & difficulty filter**.
+- **Real data pipeline** — `scripts/import-osm.mjs` pulls hiking routes from
+  OpenStreetMap (Overpass) with computed distance and optional ascent.
+- **Data layer** — `src/lib/trails-repo.ts` reads from Supabase, falls back to seed.
+- **Maps** — MapLibre route line + trailhead marker, fits bounds automatically.
+- **Offline maps** — `pmtiles://` basemap support with a fallback chain and a
+  "Download offline map" button (see [docs/OFFLINE-MAPS.md](docs/OFFLINE-MAPS.md)).
+- **On-trail navigation** — `useGeolocation` watch drives a live position marker.
+- **Logistics** — transport, guesthouses, season, water notes per trail, with
+  verified detail for the iconic routes from published hiking guides.
+- **Community reviews** — submit + display, backed by Supabase with RLS and
+  anonymous sign-in (no login wall).
+- **PWA** — installable, offline app shell, best-effort tile caching.
 
-## Deploy on Vercel
+Currently **55 curated + OpenStreetMap trails** live in Supabase, cleaned to
+Albania's real border.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Roadmap
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [ROADMAP.md](ROADMAP.md) — real OSM data pipeline, PMTiles offline regions,
+auth + review UI, elevation profiles, and a Capacitor wrap for background GPS.
+
+## Honest limitations
+
+- A PWA **cannot** track GPS with the screen off / app backgrounded — only a
+  native wrapper (Capacitor) can. Foreground navigation works.
+- Sample trail geometry is hand-traced and approximate — **not for navigation**
+  until replaced with real OSM/GPX data.
+- Tile caching is best-effort; reliable offline regions need PMTiles.

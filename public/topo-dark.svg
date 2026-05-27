@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="340">
+  <path d="M0,18 C55,10 115,26 195,16 C275,6 345,22 420,14 C455,10 480,16 500,14"
+    stroke="#4AAF80" stroke-width="0.9" fill="none" stroke-opacity="0.12"/>
+  <path d="M0,44 C45,36 105,52 175,42 C245,32 315,48 390,40 C435,35 465,41 500,39"
+    stroke="#4AAF80" stroke-width="0.55" fill="none" stroke-opacity="0.07"/>
+  <path d="M0,72 C60,64 120,80 200,70 C280,60 350,76 425,66 C460,61 482,68 500,66"
+    stroke="#4AAF80" stroke-width="0.9" fill="none" stroke-opacity="0.12"/>
+  <path d="M0,98 C50,90 110,106 185,96 C260,86 330,102 405,93 C445,88 473,95 500,93"
+    stroke="#4AAF80" stroke-width="0.55" fill="none" stroke-opacity="0.07"/>
+  <path d="M0,126 C65,118 125,134 205,124 C285,114 355,130 430,120 C462,115 484,122 500,120"
+    stroke="#4AAF80" stroke-width="0.9" fill="none" stroke-opacity="0.12"/>
+  <path d="M0,152 C48,144 108,160 180,150 C252,140 322,156 398,146 C440,140 468,148 500,146"
+    stroke="#4AAF80" stroke-width="0.55" fill="none" stroke-opacity="0.07"/>
+  <path d="M0,180 C58,172 118,188 198,178 C278,168 348,184 423,174 C457,169 481,176 500,174"
+    stroke="#4AAF80" stroke-width="0.9" fill="none" stroke-opacity="0.12"/>
+  <path d="M0,206 C52,198 112,214 188,204 C264,194 334,210 410,200 C448,194 474,202 500,200"
+    stroke="#4AAF80" stroke-width="0.55" fill="none" stroke-opacity="0.07"/>
+  <path d="M0,234 C62,226 122,242 202,232 C282,222 352,238 427,228 C460,223 483,230 500,228"
+    stroke="#4AAF80" stroke-width="0.9" fill="none" stroke-opacity="0.12"/>
+  <path d="M0,260 C47,252 107,268 180,258 C253,248 323,264 400,254 C442,248 470,256 500,254"
+    stroke="#4AAF80" stroke-width="0.55" fill="none" stroke-opacity="0.07"/>
+  <path d="M0,288 C57,280 117,296 195,286 C273,276 343,292 420,282 C455,276 480,284 500,282"
+    stroke="#4AAF80" stroke-width="0.9" fill="none" stroke-opacity="0.12"/>
+  <path d="M0,314 C50,306 110,322 185,312 C260,302 330,318 405,308 C444,302 472,310 500,308"
+    stroke="#4AAF80" stroke-width="0.55" fill="none" stroke-opacity="0.07"/>
+  <path d="M0,340 C60,332 120,348 200,338 C280,328 350,344 425,334 C458,329 482,336 500,334"
+    stroke="#4AAF80" stroke-width="0.9" fill="none" stroke-opacity="0.12"/>
+
+  <ellipse cx="175" cy="170" rx="62" ry="42"
+    stroke="#4AAF80" stroke-width="0.7" fill="none" stroke-opacity="0.10"/>
+  <ellipse cx="175" cy="170" rx="96" ry="64"
+    stroke="#4AAF80" stroke-width="0.5" fill="none" stroke-opacity="0.07"/>
+  <ellipse cx="175" cy="170" rx="130" ry="86"
+    stroke="#4AAF80" stroke-width="0.4" fill="none" stroke-opacity="0.05"/>
+
+  <ellipse cx="410" cy="60" rx="52" ry="34"
+    stroke="#4AAF80" stroke-width="0.7" fill="none" stroke-opacity="0.09"/>
+  <ellipse cx="410" cy="60" rx="82" ry="54"
+    stroke="#4AAF80" stroke-width="0.5" fill="none" stroke-opacity="0.06"/>
+
+  <ellipse cx="60" cy="290" rx="48" ry="30"
+    stroke="#4AAF80" stroke-width="0.7" fill="none" stroke-opacity="0.09"/>
+  <ellipse cx="60" cy="290" rx="76" ry="50"
+    stroke="#4AAF80" stroke-width="0.5" fill="none" stroke-opacity="0.06"/>
+
+  <ellipse cx="460" cy="220" rx="44" ry="28"
+    stroke="#4AAF80" stroke-width="0.6" fill="none" stroke-opacity="0.08"/>
+</svg>
