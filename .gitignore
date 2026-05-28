@@ -43,6 +43,7 @@ next-env.d.ts
 
 # generated / large data
 /data/*.log
+/data/osm-trails.json
 /public/maps/*.pmtiles
 
 # pmtiles CLI tooling (not app code)
@@ -56,3 +57,4 @@ next-env.d.ts
 /AGENTS.md
 /CLAUDE.md
 .idea/
+.vercel
