@@ -37,24 +37,48 @@ export function useGeolocation() {
 
   const start = useCallback(() => {
     if (!("geolocation" in navigator)) {
-      setState((s) => ({ ...s, error: "Geolocation not supported" }));
+      setState((s) => ({ ...s, error: "unsupported" }));
       return;
     }
     if (watchId.current !== null) return;
     setState((s) => ({ ...s, watching: true, error: null }));
-    watchId.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        setState({
-          position: [pos.coords.longitude, pos.coords.latitude],
-          accuracy: pos.coords.accuracy,
-          heading: pos.coords.heading,
-          error: null,
-          watching: true,
-        });
-      },
-      (err) => setState((s) => ({ ...s, error: err.message, watching: false })),
-      { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 },
+    const onSuccess = (pos: GeolocationPosition) => {
+      setState({
+        position: [pos.coords.longitude, pos.coords.latitude],
+        accuracy: pos.coords.accuracy,
+        heading: pos.coords.heading,
+        error: null,
+        watching: true,
+      });
+    };
+
+    const codeFor = (err: GeolocationPositionError) =>
+      err.code === 1 ? "denied" : err.code === 3 ? "timeout" : "unavailable";
+
+    // Quick first fix: allow cached position + network-based geolocation.
+    navigator.geolocation.getCurrentPosition(
+      onSuccess,
+      () => {/* ignore — watch will report errors */},
+      { enableHighAccuracy: false, maximumAge: 60_000, timeout: 10_000 },
     );
+
+    const startWatch = (highAccuracy: boolean) => {
+      watchId.current = navigator.geolocation.watchPosition(
+        onSuccess,
+        (err) => {
+          // On timeout with high accuracy, retry once with lower accuracy.
+          if (err.code === 3 && highAccuracy) {
+            if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
+            watchId.current = null;
+            startWatch(false);
+            return;
+          }
+          setState((s) => ({ ...s, error: codeFor(err), watching: false }));
+        },
+        { enableHighAccuracy: highAccuracy, maximumAge: 30_000, timeout: 30_000 },
+      );
+    };
+    startWatch(true);
   }, []);
 
   useEffect(() => () => stop(), [stop]);

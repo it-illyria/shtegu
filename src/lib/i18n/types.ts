@@ -110,6 +110,13 @@ export interface Dictionary {
   locating: string;
   /** Template: {error} */
   locationError: string;
+  locationDenied: string;
+  locationUnavailable: string;
+  locationTimeout: string;
+  locationUnsupported: string;
+  locationDeniedHelp: string;
+  locationRetry: string;
+  nearbyBrowseFallback: string;
   locationPrompt: string;
   /** Template: {count} */
   nearestTrails: string;
@@ -161,6 +168,7 @@ export interface Dictionary {
 
   // Reviews
   reviewsNoConfig: string;
+  reviewsSignInRequired: string;
   reviewsNamePlaceholder: string;
   reviewsRatingLabel: string;
   /** Template: {n} */
@@ -205,6 +213,13 @@ export interface Dictionary {
   homeTrailsLabel: string;
   homeRegionsLabel: string;
   homeCountryLabel: string;
+  heroFeaturedTrail: string;
+  heroViewTrail: string;
+  heroSaveTrail: string;
+  heroSavedTrail: string;
+  heroStatDistance: string;
+  heroStatElevation: string;
+  heroStatTime: string;
 
   // Footer
   footerColophon: string;

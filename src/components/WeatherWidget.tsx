@@ -37,7 +37,12 @@ export default function WeatherWidget({ trailhead }: { trailhead: [number, numbe
   function dayName(iso: string, index: number): string {
     if (index === 0) return t.weatherToday;
     const d = new Date(`${iso}T00:00:00`);
-    return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(lang === "sq" ? "sq-AL" : "en-GB", { weekday: "short" });
+    if (Number.isNaN(d.getTime())) return iso;
+    if (lang === "sq") {
+      const SQ_SHORT = ["Die", "Hën", "Mar", "Mër", "Enj", "Pre", "Sht"];
+      return SQ_SHORT[d.getDay()];
+    }
+    return d.toLocaleDateString("en-GB", { weekday: "short" });
   }
 
   function weatherLabel(item: { label: string; labelSq: string }): string {

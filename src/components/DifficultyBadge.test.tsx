@@ -13,15 +13,15 @@ describe("DifficultyBadge", () => {
     expect(screen.getByText("Hard")).toBeInTheDocument();
   });
 
-  it("applies a distinct colour class per level", () => {
+  it("applies a distinct background per level", () => {
     const { rerender } = render(<DifficultyBadge level="easy" />, {
       wrapper: Wrapper,
     });
-    const easy = screen.getByText("Easy").className;
+    const easyBg = screen.getByText("Easy").style.background;
     rerender(<DifficultyBadge level="expert" />);
-    const expert = screen.getByText("Expert").className;
-    expect(easy).not.toEqual(expert);
-    expect(easy).toContain("green");
-    expect(expert).toContain("red");
+    const expertBg = screen.getByText("Expert").style.background;
+    expect(easyBg).not.toEqual(expertBg);
+    expect(easyBg).toContain("badge-easy");
+    expect(expertBg).toContain("badge-expert");
   });
 });

@@ -17,7 +17,7 @@ export default function LanguageToggle() {
           onClick={() => setLang(l)}
           aria-label={l === "sq" ? t.langAlbanian : t.langEnglish}
           aria-pressed={lang === l}
-          className="rounded-full px-2.5 py-1 transition-colors"
+          className="inline-flex h-7 min-w-[34px] items-center justify-center rounded-full px-2.5 transition-colors"
           style={
             lang === l
               ? { background: "var(--text-primary)", color: "var(--background)" }

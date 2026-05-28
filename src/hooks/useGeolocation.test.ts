@@ -7,22 +7,26 @@ afterEach(() => vi.restoreAllMocks());
 describe("useGeolocation", () => {
   it("starts watching and exposes the position as [lng, lat]", () => {
     const clearWatch = vi.fn();
+    const fakePosition = {
+      coords: {
+        longitude: 19.77,
+        latitude: 42.39,
+        accuracy: 12,
+        heading: null,
+        altitude: null,
+        altitudeAccuracy: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
+    } as GeolocationPosition;
+    const getCurrentPosition = vi.fn((success: PositionCallback) => {
+      success(fakePosition);
+    });
     const watchPosition = vi.fn((success: PositionCallback) => {
-      success({
-        coords: {
-          longitude: 19.77,
-          latitude: 42.39,
-          accuracy: 12,
-          heading: null,
-          altitude: null,
-          altitudeAccuracy: null,
-          speed: null,
-        },
-        timestamp: Date.now(),
-      } as GeolocationPosition);
+      success(fakePosition);
       return 1;
     });
-    vi.stubGlobal("navigator", { geolocation: { watchPosition, clearWatch } });
+    vi.stubGlobal("navigator", { geolocation: { getCurrentPosition, watchPosition, clearWatch } });
 
     const { result } = renderHook(() => useGeolocation());
     expect(result.current.position).toBeNull();
@@ -39,10 +43,10 @@ describe("useGeolocation", () => {
     expect(result.current.watching).toBe(false);
   });
 
-  it("reports an error when geolocation is unsupported", () => {
+  it("reports an error code when geolocation is unsupported", () => {
     vi.stubGlobal("navigator", {});
     const { result } = renderHook(() => useGeolocation());
     act(() => result.current.start());
-    expect(result.current.error).toMatch(/not supported/i);
+    expect(result.current.error).toBe("unsupported");
   });
 });

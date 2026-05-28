@@ -3,7 +3,7 @@ import type { Dictionary } from "./types";
 const sq: Dictionary = {
   // App
   appName: "Shtegu",
-  appTagline: "Shtigje hiking në Shqipëri — zbulo, plano, navigo.",
+  appTagline: "Shtigje hiking në Shqipëri — zbulo, planifiko, navigo.",
 
   // Nav/layout
   allTrails: "Të gjitha shtigjet",
@@ -123,6 +123,13 @@ const sq: Dictionary = {
   updateLocation: "Përditëso vendndodhjen time",
   locating: "Duke ju gjetur…",
   locationError: "Nuk u mor vendndodhja juaj: {error}",
+  locationDenied: "Leja u refuzua",
+  locationUnavailable: "Vendndodhja nuk u gjet",
+  locationTimeout: "Koha mbaroi — provoni përsëri",
+  locationUnsupported: "Shfletuesi nuk e mbështet vendndodhjen",
+  locationDeniedHelp: "Klikoni te ikona e bllokimit në shiritin e adresës dhe lejoni 'Location' për këtë faqe, pastaj provoni përsëri.",
+  locationRetry: "Provo përsëri",
+  nearbyBrowseFallback: "Shfletoni shtigjet sipas rajonit",
   locationPrompt: "Shtypni \"Gjej shtigje pranë meje\" për të aktivizuar vendndodhjen dhe të shihni shtigjet më të afërta.",
   nearestTrails: "Duke treguar {count} shtigjet më të afërta sipas distancës në vijë të drejtë.",
   nearestTrail: "Duke treguar shtegun {count} më të afërt sipas distancës në vijë të drejtë.",
@@ -164,6 +171,8 @@ const sq: Dictionary = {
   // Reviews
   reviewsNoConfig:
     "Vlerësimet kërkojnë konfigurimin e Supabase. Shtoni çelësat tuaj në .env.local për të aktivizuar vlerësimet e komunitetit.",
+  reviewsSignInRequired:
+    "Regjistrohu me email për të lënë një vlerësim.",
   reviewsNamePlaceholder: "Emri juaj (opsionale)",
   reviewsRatingLabel: "Vlerësimi",
   reviewsRatingOption: "{n} ★",
@@ -204,6 +213,13 @@ const sq: Dictionary = {
   homeTrailsLabel: "shtigje",
   homeRegionsLabel: "rajone",
   homeCountryLabel: "Shqipëri",
+  heroFeaturedTrail: "Shteg i veçantë",
+  heroViewTrail: "Shiko shtegun",
+  heroSaveTrail: "Ruaj shtegun",
+  heroSavedTrail: "Ruajtur",
+  heroStatDistance: "Distanca",
+  heroStatElevation: "Lartësi",
+  heroStatTime: "Koha",
 
   // Footer
   footerColophon: "Shtegu — Shtigje alpine në Shqipëri",
@@ -213,8 +229,8 @@ const sq: Dictionary = {
   editSuggestButton: "Suggjero ndryshim",
   editModalTitle: "Suggjero korrigjim",
   editModalDesc: "Të gjitha fushat janë të parapërgatitura — ndryshoni vetëm ato që kanë nevojë. Ndryshimi juaj do të rishikohet para se të bëhet publik.",
-  editNameLabel: "Emri i shtegun (anglisht)",
-  editNameSqLabel: "Emri i shtegun (shqip)",
+  editNameLabel: "Emri i shtegut (anglisht)",
+  editNameSqLabel: "Emri i shtegut (shqip)",
   editRegionLabel: "Rajoni",
   editSummaryLabel: "Pershkrimi",
   editDifficultyLabel: "Vështirësia",
@@ -256,7 +272,7 @@ const sq: Dictionary = {
   photosHeading: "Foto",
   photosUpload: "Shto foto",
   photosUploading: "Duke ngarkuar…",
-  photosNone: "Ende nuk ka foto — ji i pari!",
+  photosNone: "Ende nuk ka foto — bëhu i pari!",
   photosErrorSize: "Skedari duhet të jetë nën 5 MB",
   photosErrorUpload: "Ngarkimi dështoi",
 

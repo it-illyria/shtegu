@@ -403,7 +403,7 @@ function ActivityInner({ trails }: { trails: Trail[] }) {
               <button
                 type="submit"
                 disabled={submitting || !selectedSlug}
-                className="rounded-full px-5 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+                className="inline-flex h-11 items-center justify-center rounded-full px-6 text-sm font-semibold transition-colors disabled:opacity-50 sm:h-9 sm:px-5 sm:font-medium"
                 style={{ background: "var(--btn-primary)", color: "var(--btn-primary-text)" }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLButtonElement).style.background =
@@ -510,7 +510,8 @@ function ActivityInner({ trails }: { trails: Trail[] }) {
                 <button
                   type="button"
                   onClick={() => void handleDelete(activity.id)}
-                  className="shrink-0 rounded-lg border px-2.5 py-1 text-xs transition-colors"
+                  aria-label={t.activityDelete}
+                  className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg border px-3 text-xs transition-colors sm:h-8 sm:px-2.5"
                   style={{
                     borderColor: "var(--card-border)",
                     color: "var(--text-muted)",

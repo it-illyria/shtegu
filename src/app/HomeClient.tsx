@@ -9,6 +9,7 @@ import TrailProposalModal from "@/components/TrailProposalModal";
 import { useI18n, useT } from "@/lib/i18n/context";
 import { getTrailheadWeather, type WeatherCurrent, type WeatherDay } from "@/lib/weather";
 import { buildElevationProfile } from "@/lib/elevation";
+import { useBookmarks } from "@/hooks/useBookmarks";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,8 @@ const GRAD: Record<string, string> = {
 
 function FeaturedHero({ trails, onActiveChange }: { trails: Trail[]; onActiveChange?: (i: number) => void }) {
   const { lang } = useI18n();
+  const t = useT();
+  const { bookmarks, toggle } = useBookmarks();
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -54,7 +57,7 @@ function FeaturedHero({ trails, onActiveChange }: { trails: Trail[]; onActiveCha
   function goTo(i: number) { setActive(i); }
 
   return (
-    <div className="relative overflow-hidden rounded-[24px]" style={{ height: "420px" }}>
+    <div className="relative overflow-hidden rounded-[20px] sm:rounded-[24px]" style={{ height: "clamp(260px, 45svh, 420px)" }}>
       {trails.map((trail, idx) => {
         const isActive = idx === active;
         const name    = lang === "sq" && trail.sq?.name    ? trail.sq.name    : trail.name;
@@ -78,33 +81,33 @@ function FeaturedHero({ trails, onActiveChange }: { trails: Trail[]; onActiveCha
             <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 45%, transparent 100%)" }} />
 
             {/* Hero text content */}
-            <div className="absolute bottom-0 left-0 right-0 z-10 px-8 pb-14">
-              <span className="text-[11px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.55)" }}>
-                Featured Trail
+            <div className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-10 sm:px-8 sm:pb-14">
+              <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.55)" }}>
+                {t.heroFeaturedTrail}
               </span>
-              <h1 className="mt-1 font-display text-[42px] font-bold leading-tight tracking-[-0.025em] text-white sm:text-[52px]">
+              <h1 className="mt-1 font-display text-[26px] font-bold leading-tight tracking-[-0.025em] text-white sm:text-[42px]">
                 {name}
               </h1>
-              <p className="mt-2 max-w-md text-[14px] leading-relaxed" style={{ color: "rgba(255,255,255,0.68)" }}>
+              <p className="mt-1.5 hidden max-w-md text-[13px] leading-relaxed sm:block" style={{ color: "rgba(255,255,255,0.68)" }}>
                 {summary}
               </p>
 
               {/* Stats row */}
-              <div className="mt-4 flex flex-wrap items-center gap-5 text-[13px]" style={{ color: "rgba(255,255,255,0.75)" }}>
+              <div className="mt-3 flex flex-wrap items-center gap-3 text-[12px] sm:mt-4 sm:gap-5 sm:text-[13px]" style={{ color: "rgba(255,255,255,0.75)" }}>
                 <span className="flex items-center gap-1.5">
                   <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
                     <circle cx="7" cy="4.5" r="2" stroke="currentColor" strokeWidth="1.4" />
                     <path d="M7 13C5 10.5 1.5 8.5 1.5 4.5a5.5 5.5 0 0 1 11 0C12.5 8.5 9 10.5 7 13Z" stroke="currentColor" strokeWidth="1.4" />
                   </svg>
                   <strong className="text-white">{trail.distanceKm} km</strong>
-                  <span style={{ color: "rgba(255,255,255,0.45)" }}>Distance</span>
+                  <span style={{ color: "rgba(255,255,255,0.45)" }}>{t.heroStatDistance}</span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
                     <path d="M7 12V2M3.5 5.5l3.5-3.5 3.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <strong className="text-white">{trail.ascentM} m</strong>
-                  <span style={{ color: "rgba(255,255,255,0.45)" }}>Elevation Gain</span>
+                  <span style={{ color: "rgba(255,255,255,0.45)" }}>{t.heroStatElevation}</span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden>
@@ -112,7 +115,7 @@ function FeaturedHero({ trails, onActiveChange }: { trails: Trail[]; onActiveCha
                     <path d="M7 4v3.5l2 1.2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <strong className="text-white">{trail.durationHours}h</strong>
-                  <span style={{ color: "rgba(255,255,255,0.45)" }}>Est. Time</span>
+                  <span style={{ color: "rgba(255,255,255,0.45)" }}>{t.heroStatTime}</span>
                 </span>
                 <span
                   className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-semibold"
@@ -123,26 +126,38 @@ function FeaturedHero({ trails, onActiveChange }: { trails: Trail[]; onActiveCha
               </div>
 
               {/* CTA buttons */}
-              <div className="mt-5 flex flex-wrap gap-3">
+              <div className="mt-3 flex flex-wrap gap-2 sm:mt-5 sm:gap-3">
                 <Link
                   href={`/trails/${trail.slug}`}
-                  className="flex h-12 items-center gap-2 rounded-[16px] px-6 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+                  className="flex h-9 items-center gap-2 rounded-[14px] px-4 text-[13px] font-semibold text-white transition-opacity hover:opacity-90 sm:h-12 sm:rounded-[16px] sm:px-6 sm:text-[14px]"
                   style={{ background: "#3F6B46" }}
                 >
-                  View Trail
+                  {t.heroViewTrail}
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
                     <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </Link>
-                <button
-                  className="flex h-12 items-center gap-2 rounded-[16px] px-6 text-[14px] font-semibold transition-opacity hover:opacity-80"
-                  style={{ border: "1px solid rgba(255,255,255,0.22)", background: "rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.90)" }}
-                >
-                  Save Trail
-                  <svg width="13" height="15" viewBox="0 0 14 16" fill="none" aria-hidden>
-                    <path d="M2 1h10a1 1 0 0 1 1 1v12l-6-3.5L1 14V2a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                  </svg>
-                </button>
+                {(() => {
+                  const isSaved = bookmarks.has(trail.slug);
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => toggle(trail.slug)}
+                      aria-pressed={isSaved}
+                      className="flex h-9 items-center gap-2 rounded-[14px] px-4 text-[13px] font-semibold transition-opacity hover:opacity-80 sm:h-12 sm:rounded-[16px] sm:px-6 sm:text-[14px]"
+                      style={{
+                        border: "1px solid rgba(255,255,255,0.22)",
+                        background: isSaved ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.09)",
+                        color: "rgba(255,255,255,0.90)",
+                      }}
+                    >
+                      {isSaved ? t.heroSavedTrail : t.heroSaveTrail}
+                      <svg width="13" height="15" viewBox="0 0 14 16" fill={isSaved ? "currentColor" : "none"} aria-hidden>
+                        <path d="M2 1h10a1 1 0 0 1 1 1v12l-6-3.5L1 14V2a1 1 0 0 1 1-1Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -617,7 +632,7 @@ export default function HomeClient({
 
       {/* Main content (hidden when searching) */}
       {!filtered && (
-        <div className="flex flex-1 gap-6 px-6 pt-6 pb-10">
+        <div className="flex flex-1 gap-6 px-4 pt-4 pb-10 sm:px-6 sm:pt-6">
           {/* Center column */}
           <div className="flex-1 min-w-0 flex flex-col gap-8">
             {/* Featured hero */}

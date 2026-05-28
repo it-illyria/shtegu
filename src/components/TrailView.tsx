@@ -147,38 +147,47 @@ export default function TrailView({ trail }: { trail: Trail }) {
 
       <div className="mt-6 overflow-hidden rounded-xl border" style={{ borderColor: "var(--card-border)" }}>
         <div className="h-80"><TrailMap trail={trail} userPosition={geo.position} /></div>
-        <div className="flex items-center justify-between gap-3 border-t p-3" style={{ borderColor: "var(--card-border)" }}>
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-3 border-t p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4" style={{ borderColor: "var(--card-border)" }}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
             <button
               onClick={geo.watching ? geo.stop : geo.start}
-              className="rounded-full px-4 py-1.5 text-sm font-medium transition-colors"
+              className="inline-flex h-11 w-full items-center justify-center rounded-full px-5 text-sm font-semibold transition-colors sm:h-9 sm:w-auto"
               style={{ background: "var(--btn-primary)", color: "var(--btn-primary-text)" }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--btn-primary-hover)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--btn-primary)"; }}
             >
               {geo.watching ? t.stopNavigation : t.navigate}
             </button>
-            <button
-              onClick={() => downloadGpx(trail)}
-              className="rounded-full px-3 py-1 text-xs font-medium transition-colors"
-              style={{ background: "var(--surface-inset)", color: "var(--text-muted)", border: "1px solid var(--card-border)" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-muted)"; }}
-            >
-              ↓ {t.downloadGpx}
-            </button>
-            <Link
-              href={`/activity?trail=${trail.slug}`}
-              className="rounded-full px-3 py-1 text-xs font-medium transition-colors"
-              style={{ background: "var(--surface-inset)", color: "var(--text-muted)", border: "1px solid var(--card-border)" }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--summit-green)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-muted)"; }}
-            >
-              ✓ {t.logHikeButton}
-            </Link>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
+              <button
+                onClick={() => downloadGpx(trail)}
+                className="inline-flex h-10 items-center justify-center rounded-full px-3 text-[13px] font-medium transition-colors sm:h-9"
+                style={{ background: "var(--surface-inset)", color: "var(--text-muted)", border: "1px solid var(--card-border)" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-muted)"; }}
+              >
+                ↓ {t.downloadGpx}
+              </button>
+              <Link
+                href={`/activity?trail=${trail.slug}`}
+                className="inline-flex h-10 items-center justify-center rounded-full px-3 text-[13px] font-medium transition-colors sm:h-9"
+                style={{ background: "var(--surface-inset)", color: "var(--text-muted)", border: "1px solid var(--card-border)" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--summit-green)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-muted)"; }}
+              >
+                ✓ {t.logHikeButton}
+              </Link>
+            </div>
           </div>
-          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-            {geo.error ? geo.error : geo.position ? interp(t.accuracy, { m: Math.round(geo.accuracy ?? 0) }) : t.locationOff}
+          <span className="text-center text-xs sm:text-right" style={{ color: "var(--text-muted)" }}>
+            {geo.error
+              ? (geo.error === "denied" ? t.locationDenied
+                : geo.error === "timeout" ? t.locationTimeout
+                : geo.error === "unsupported" ? t.locationUnsupported
+                : t.locationUnavailable)
+              : geo.position
+                ? interp(t.accuracy, { m: Math.round(geo.accuracy ?? 0) })
+                : t.locationOff}
           </span>
         </div>
       </div>

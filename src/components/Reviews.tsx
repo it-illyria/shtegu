@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
+import AuthButton from "@/components/AuthButton";
 import { useI18n, interp } from "@/lib/i18n/context";
 
 interface ReviewRow {
@@ -68,14 +69,16 @@ export default function Reviews({ trailSlug }: { trailSlug: string }) {
     setMessage(null);
     let userId = user?.id;
     if (!userId) {
-      // Auth context may not have resolved yet — check the session directly first.
       const { data: sessionData } = await supabase.auth.getSession();
       userId = sessionData.session?.user?.id;
     }
     if (!userId) {
       const { data, error } = await supabase.auth.signInAnonymously();
-      if (error) { setMessage(t.reviewsErrorSession); return setStatus("error"); }
-      userId = data.user?.id;
+      if (error || !data.user?.id) {
+        setMessage(t.reviewsSignInRequired);
+        return setStatus("error");
+      }
+      userId = data.user.id;
     }
     const authorName = signedIn ? identityName || t.reviewsMember : name.trim() || t.reviewsAnonymous;
     const { error } = await supabase.from("reviews").insert({
@@ -154,6 +157,14 @@ export default function Reviews({ trailSlug }: { trailSlug: string }) {
             </span>
           )}
         </div>
+        {status === "error" && !signedIn && (message === t.reviewsSignInRequired || message === t.reviewsErrorSession) && (
+          <div className="mt-3 border-t pt-3" style={{ borderColor: "var(--card-border)" }}>
+            <p className="mb-2 text-xs" style={{ color: "var(--text-muted)" }}>
+              {t.reviewsSignInRequired}
+            </p>
+            <AuthButton />
+          </div>
+        )}
       </form>
 
       <ul className="mt-4 flex flex-col gap-3">

@@ -1,8 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { TrailProposal, TrailContribution, Difficulty } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
+
+type AlertSeverity = "info" | "warning" | "danger";
+
+interface AdminAlert {
+  id: string;
+  message_en: string;
+  message_sq: string;
+  severity: AlertSeverity;
+  dismissable: boolean;
+  starts_at: string;
+  ends_at: string | null;
+  created_at: string;
+}
 
 const BADGE_COLOR: Record<Difficulty, string> = {
   easy: "#6BA368",
@@ -51,7 +64,7 @@ interface Props {
 }
 
 export default function AdminClient({ initialProposals, initialContributions }: Props) {
-  const [tab, setTab] = useState<"proposals" | "contributions">("proposals");
+  const [tab, setTab] = useState<"proposals" | "contributions" | "alerts">("proposals");
   const [proposals, setProposals] = useState<TrailProposal[]>(initialProposals);
   const [contributions, setContributions] = useState<TrailContribution[]>(initialContributions);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -127,11 +140,11 @@ export default function AdminClient({ initialProposals, initialContributions }: 
   });
 
   return (
-    <main className="flex flex-1 flex-col p-6 lg:p-8 max-w-4xl mx-auto w-full">
+    <main className="flex flex-1 flex-col px-4 py-6 sm:p-6 lg:p-8 max-w-4xl mx-auto w-full">
       {/* Header */}
       <div className="mb-6">
         <h1
-          className="font-display text-[26px] font-bold tracking-tight"
+          className="font-display text-[22px] font-bold tracking-tight sm:text-[26px]"
           style={{ color: "var(--text-primary)" }}
         >
           Admin Panel
@@ -143,17 +156,29 @@ export default function AdminClient({ initialProposals, initialContributions }: 
 
       {/* Tabs */}
       <div
-        className="flex gap-6 border-b mb-6"
+        className="flex gap-4 border-b mb-6 sm:gap-6 overflow-x-auto"
         style={{ borderColor: "var(--card-border)" }}
       >
-        <button style={tabStyle(tab === "proposals")} onClick={() => setTab("proposals")}>
+        <button
+          style={tabStyle(tab === "proposals")}
+          onClick={() => setTab("proposals")}
+          className="shrink-0 whitespace-nowrap"
+        >
           Proposals ({proposals.length})
         </button>
         <button
           style={tabStyle(tab === "contributions")}
           onClick={() => setTab("contributions")}
+          className="shrink-0 whitespace-nowrap"
         >
           Contributions ({contributions.length})
+        </button>
+        <button
+          style={tabStyle(tab === "alerts")}
+          onClick={() => setTab("alerts")}
+          className="shrink-0 whitespace-nowrap"
+        >
+          Alerts
         </button>
       </div>
 
@@ -195,8 +220,11 @@ export default function AdminClient({ initialProposals, initialContributions }: 
         </div>
       )}
 
-      {/* Toasts */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50">
+      {/* Alerts tab */}
+      {tab === "alerts" && <AlertsTab onToast={addToast} />}
+
+      {/* Toasts — above mobile bottom nav */}
+      <div className="fixed left-4 right-4 bottom-20 z-50 flex flex-col gap-2 sm:left-auto sm:bottom-6 sm:right-6">
         {toasts.map((t) => (
           <div
             key={t.id}
@@ -236,11 +264,11 @@ function ActionButtons({
   onReject: () => void;
 }) {
   return (
-    <div className="flex gap-2 mt-4">
+    <div className="grid grid-cols-2 gap-2 mt-4 sm:flex sm:gap-2">
       <button
         onClick={onApprove}
         disabled={isBusy}
-        className="rounded-lg px-4 py-1.5 text-sm font-semibold text-white transition-opacity disabled:opacity-50"
+        className="inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold text-white transition-opacity disabled:opacity-50 sm:h-9 sm:py-1.5"
         style={{ background: "#3F6B46" }}
       >
         Approve
@@ -248,7 +276,7 @@ function ActionButtons({
       <button
         onClick={onReject}
         disabled={isBusy}
-        className="rounded-lg px-4 py-1.5 text-sm font-semibold transition-opacity disabled:opacity-50"
+        className="inline-flex h-11 items-center justify-center rounded-lg px-4 text-sm font-semibold transition-opacity disabled:opacity-50 sm:h-9 sm:py-1.5"
         style={{
           background: "var(--danger-bg)",
           color: "var(--danger-text)",
@@ -429,6 +457,200 @@ function ContributionCard({
       )}
 
       <ActionButtons isBusy={isBusy} onApprove={onApprove} onReject={onReject} />
+    </div>
+  );
+}
+
+// ─── Alerts management ──────────────────────────────────────────────────────
+
+function AlertsTab({ onToast }: { onToast: (msg: string, ok: boolean) => void }) {
+  const [alerts, setAlerts] = useState<AdminAlert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [messageEn, setMessageEn] = useState("");
+  const [messageSq, setMessageSq] = useState("");
+  const [severity, setSeverity] = useState<AlertSeverity>("info");
+  const [dismissable, setDismissable] = useState(true);
+  const [endsAt, setEndsAt] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function load() {
+    if (!supabase) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("system_alerts")
+      .select("id,message_en,message_sq,severity,dismissable,starts_at,ends_at,created_at")
+      .order("created_at", { ascending: false });
+    setLoading(false);
+    if (error) { onToast(`Error: ${error.message}`, false); return; }
+    if (data) setAlerts(data as AdminAlert[]);
+  }
+
+  useEffect(() => { void load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  async function createAlert(e: React.FormEvent) {
+    e.preventDefault();
+    if (!supabase || messageEn.trim().length === 0 || messageSq.trim().length === 0) return;
+    setSaving(true);
+    const { error } = await supabase.from("system_alerts").insert({
+      message_en: messageEn.trim(),
+      message_sq: messageSq.trim(),
+      severity,
+      dismissable,
+      ends_at: endsAt ? new Date(endsAt).toISOString() : null,
+    });
+    setSaving(false);
+    if (error) { onToast(`Error: ${error.message}`, false); return; }
+    setMessageEn(""); setMessageSq(""); setEndsAt(""); setSeverity("info"); setDismissable(true);
+    onToast("Alert created.", true);
+    void load();
+  }
+
+  async function deleteAlert(id: string) {
+    if (!supabase) return;
+    const { error } = await supabase.from("system_alerts").delete().eq("id", id);
+    if (error) { onToast(`Error: ${error.message}`, false); return; }
+    onToast("Alert deleted.", true);
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+  }
+
+  const inputStyle = {
+    background: "var(--input-bg)",
+    color: "var(--input-text)",
+    borderColor: "var(--input-border)",
+  };
+
+  return (
+    <div className="flex flex-col gap-6">
+      <form
+        onSubmit={createAlert}
+        className="rounded-2xl p-5 flex flex-col gap-3"
+        style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
+      >
+        <h2 className="font-display text-[17px] font-semibold" style={{ color: "var(--text-primary)" }}>New alert</h2>
+        <label className="flex flex-col gap-1 text-xs" style={{ color: "var(--text-muted)" }}>
+          Message (English)
+          <input
+            type="text"
+            value={messageEn}
+            onChange={(e) => setMessageEn(e.target.value)}
+            required
+            maxLength={300}
+            className="h-10 rounded-lg border px-3 text-sm"
+            style={inputStyle}
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-xs" style={{ color: "var(--text-muted)" }}>
+          Message (Albanian)
+          <input
+            type="text"
+            value={messageSq}
+            onChange={(e) => setMessageSq(e.target.value)}
+            required
+            maxLength={300}
+            className="h-10 rounded-lg border px-3 text-sm"
+            style={inputStyle}
+          />
+        </label>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <label className="flex flex-col gap-1 text-xs" style={{ color: "var(--text-muted)" }}>
+            Severity
+            <select
+              value={severity}
+              onChange={(e) => setSeverity(e.target.value as AlertSeverity)}
+              className="h-10 rounded-lg border px-3 text-sm"
+              style={inputStyle}
+            >
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="danger">Danger</option>
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs" style={{ color: "var(--text-muted)" }}>
+            Ends at (optional)
+            <input
+              type="datetime-local"
+              value={endsAt}
+              onChange={(e) => setEndsAt(e.target.value)}
+              className="h-10 rounded-lg border px-3 text-sm"
+              style={inputStyle}
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm mt-4 sm:mt-6" style={{ color: "var(--text-primary)" }}>
+            <input
+              type="checkbox"
+              checked={dismissable}
+              onChange={(e) => setDismissable(e.target.checked)}
+            />
+            Dismissable
+          </label>
+        </div>
+        <button
+          type="submit"
+          disabled={saving}
+          className="inline-flex h-11 items-center justify-center rounded-lg px-5 text-sm font-semibold text-white transition-opacity disabled:opacity-50 sm:h-9 sm:self-start"
+          style={{ background: "#3F6B46" }}
+        >
+          {saving ? "Saving…" : "Create alert"}
+        </button>
+      </form>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="font-display text-[17px] font-semibold" style={{ color: "var(--text-primary)" }}>
+          Alerts {loading ? "" : `(${alerts.length})`}
+        </h2>
+        {loading ? (
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>Loading…</p>
+        ) : alerts.length === 0 ? (
+          <EmptyState message="No alerts." />
+        ) : (
+          alerts.map((a) => (
+            <div
+              key={a.id}
+              className="rounded-2xl p-4 flex flex-col gap-2"
+              style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <span
+                  className="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+                  style={{
+                    background:
+                      a.severity === "danger" ? "#FBE6E2" :
+                      a.severity === "warning" ? "#FFF6E0" : "#E8F1EC",
+                    color:
+                      a.severity === "danger" ? "#5A1818" :
+                      a.severity === "warning" ? "#5E3E05" : "#1B3626",
+                  }}
+                >
+                  {a.severity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void deleteAlert(a.id)}
+                  className="inline-flex h-9 items-center justify-center rounded-lg border px-3 text-xs"
+                  style={{
+                    borderColor: "var(--danger-border)",
+                    color: "var(--danger-text)",
+                    background: "transparent",
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+              <p className="text-sm" style={{ color: "var(--text-primary)" }}>
+                <strong>EN:</strong> {a.message_en}
+              </p>
+              <p className="text-sm" style={{ color: "var(--text-primary)" }}>
+                <strong>SQ:</strong> {a.message_sq}
+              </p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                {formatDate(a.starts_at)}
+                {a.ends_at ? ` → ${formatDate(a.ends_at)}` : " · no end"}
+                {a.dismissable ? " · dismissable" : " · forced"}
+              </p>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

@@ -15,6 +15,7 @@ import { ThemeProvider } from "@/lib/theme/context";
 import { parseThemeCookieServer } from "@/lib/theme/server";
 import AppSidebar from "@/components/AppSidebar";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import AlertBanner from "@/components/AlertBanner";
 import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
@@ -74,10 +75,11 @@ export default async function RootLayout({
 
             {/* ── Main scroll area ── */}
             <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+              <AlertBanner />
 
               {/* Mobile top bar (hidden on lg+) */}
               <header
-                className="flex lg:hidden items-center justify-between gap-4 border-b px-5 py-3"
+                className="flex lg:hidden items-center justify-between gap-3 border-b px-4 py-3"
                 style={{ borderColor: "var(--card-border)" }}
               >
                 <Link
@@ -93,10 +95,10 @@ export default async function RootLayout({
                     · AL
                   </span>
                 </Link>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                   <LanguageToggle />
                   <FeedbackNavLink />
-                  <AuthButton />
+                  <AuthButton compact />
                 </div>
               </header>
 

@@ -123,6 +123,13 @@ const en: Dictionary = {
   updateLocation: "Update my location",
   locating: "Locating you…",
   locationError: "Couldn't get your location: {error}",
+  locationDenied: "Permission denied",
+  locationUnavailable: "Location unavailable",
+  locationTimeout: "Timed out — try again",
+  locationUnsupported: "Geolocation not supported",
+  locationDeniedHelp: "Click the lock icon in your address bar and allow 'Location' for this site, then retry.",
+  locationRetry: "Try again",
+  nearbyBrowseFallback: "Browse trails by region",
   locationPrompt: 'Tap "Find trails near me" to enable location and see the closest trails.',
   nearestTrails: "Showing the {count} nearest trails by straight-line distance.",
   nearestTrail: "Showing the {count} nearest trail by straight-line distance.",
@@ -164,6 +171,7 @@ const en: Dictionary = {
   // Reviews
   reviewsNoConfig:
     "Reviews need Supabase configured. Add your keys to .env.local to enable community reviews.",
+  reviewsSignInRequired: "Sign in with your email to leave a review.",
   reviewsNamePlaceholder: "Your name (optional)",
   reviewsRatingLabel: "Rating",
   reviewsRatingOption: "{n} ★",
@@ -204,6 +212,13 @@ const en: Dictionary = {
   homeTrailsLabel: "trails",
   homeRegionsLabel: "regions",
   homeCountryLabel: "Albania",
+  heroFeaturedTrail: "Featured Trail",
+  heroViewTrail: "View Trail",
+  heroSaveTrail: "Save Trail",
+  heroSavedTrail: "Saved",
+  heroStatDistance: "Distance",
+  heroStatElevation: "Elevation Gain",
+  heroStatTime: "Est. Time",
 
   // Footer
   footerColophon: "Shtegu — Alpine Trails in Albania",

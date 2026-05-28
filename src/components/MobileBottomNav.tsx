@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useT } from "@/lib/i18n/context";
 
 const TrailIcon = () => (
   <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden>
@@ -41,16 +42,17 @@ interface MobileNavItem {
   exact?: boolean;
 }
 
-const navItems: MobileNavItem[] = [
-  { href: "/",         label: "Explore",   icon: <TrailIcon />,    exact: true },
-  { href: "/near-me",  label: "Near Me",   icon: <MapIcon /> },
-  { href: "/saved",    label: "Saved",     icon: <SavedIcon /> },
-  { href: "/activity", label: "Activity",  icon: <ActivityIcon /> },
-  { href: "/feedback", label: "Community", icon: <CommunityIcon /> },
-];
-
 export default function MobileBottomNav() {
   const pathname = usePathname();
+  const t = useT();
+
+  const navItems: MobileNavItem[] = [
+    { href: "/",         label: t.navExplore,   icon: <TrailIcon />,    exact: true },
+    { href: "/near-me",  label: t.navNearMe,    icon: <MapIcon /> },
+    { href: "/saved",    label: t.navSaved,     icon: <SavedIcon /> },
+    { href: "/activity", label: t.navActivity,  icon: <ActivityIcon /> },
+    { href: "/feedback", label: t.navCommunity, icon: <CommunityIcon /> },
+  ];
 
   function isActive(item: MobileNavItem) {
     return item.exact ? pathname === item.href : pathname === item.href;
@@ -73,10 +75,10 @@ export default function MobileBottomNav() {
             key={item.href}
             href={item.href}
             aria-label={item.label}
-            className="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] font-medium transition-colors"
+            className="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium leading-tight transition-colors"
             style={{
               color: active ? "var(--summit-green, #2F4F3A)" : "var(--text-muted)",
-              minHeight: "56px",
+              minHeight: "60px",
             }}
           >
             <span
