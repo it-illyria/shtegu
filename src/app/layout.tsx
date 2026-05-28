@@ -15,6 +15,7 @@ import { ThemeProvider } from "@/lib/theme/context";
 import { parseThemeCookieServer } from "@/lib/theme/server";
 import AppSidebar from "@/components/AppSidebar";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -109,6 +110,7 @@ export default async function RootLayout({
         </LanguageProvider>
         </ThemeProvider>
         <ServiceWorkerRegistrar />
+        <Analytics />
       </body>
     </html>
   );
