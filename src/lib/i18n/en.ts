@@ -68,7 +68,7 @@ const en: Dictionary = {
   safetyIntro: "Please read this before relying on Shtegu in the mountains.",
   safetyPlanningTitle: "A planning tool, not a navigation device",
   safetyPlanningBody:
-    "Shtegu is an informational and planning aid. It is not a certified navigation system. Do not rely on it as your only means of finding your way. Always carry an offline map, compass and/or a dedicated GPS, and know how to use them.",
+    "Shtegu is an information and planning tool. It is not a certified navigation system. Do not rely on it as your only means of finding your way. Always carry an offline map, compass and/or a dedicated GPS, and know how to use them.",
   safetyDataTitle: "Trail data may be approximate or wrong",
   safetyDataBody:
     "Routes come from OpenStreetMap and community sources. Some are hand-traced approximations and may be inaccurate, outdated, or incomplete. Distance, ascent, difficulty, weather and points of interest are estimates derived from third-party data and can be incorrect. Verify conditions locally before you set out.",
@@ -169,13 +169,13 @@ const en: Dictionary = {
   reviewsRatingOption: "{n} ★",
   reviewsRatingAria: "{n} out of 5",
   reviewsTextPlaceholder: "How was the trail? Conditions, tips, warnings…",
-  reviewsPost: "Post review",
+  reviewsPost: "Post a review",
   reviewsPosting: "Posting…",
   reviewsErrorWait: "Please wait a few seconds before posting again.",
   reviewsErrorSession: "Couldn't start a session — try again.",
   reviewsErrorDuplicate: "You've already reviewed this trail.",
   reviewsErrorTooMany: "You've posted several reviews recently — try again later.",
-  reviewsErrorFail: "Couldn't post — try again.",
+  reviewsErrorFail: "Couldn't post — please try again.",
   reviewsNone: "No reviews yet — be the first.",
   reviewsGuestBadge: "guest",
   reviewsMember: "Member",
@@ -200,7 +200,7 @@ const en: Dictionary = {
 
   // Home hero
   homeEyebrow: "Albania · Alpine Trails",
-  homeHeroTagline: "Discover the mountain trails.",
+  homeHeroTagline: "Discover Albania's mountain trails.",
   homeTrailsLabel: "trails",
   homeRegionsLabel: "regions",
   homeCountryLabel: "Albania",
@@ -248,7 +248,7 @@ const en: Dictionary = {
   conditionSubmitting: "Submitting…",
   conditionNotes: "Notes (optional)",
   conditionErrorWait: "Please wait 24 hours before reporting again.",
-  conditionErrorFail: "Failed to submit. Please try again.",
+  conditionErrorFail: "Couldn't submit — please try again.",
   conditionReportedAgo: "{days} days ago",
   conditionToday: "Today",
 
