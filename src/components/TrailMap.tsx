@@ -285,11 +285,20 @@ export default function TrailMap({ trail, userPosition, className }: Props) {
       addTrailOverlay(map);
       if (poisRef.current.features.length) addPoiLayer(map, poisRef.current);
       for (const id of overlaysRef.current) addOverlayLayer(map, id);
+      // Mobile Safari/Chrome sometimes init the canvas at 0×0 because the
+      // container's final size isn't laid out yet. Force a resize once the
+      // basemap is ready so the canvas matches the visible box.
+      map.resize();
     });
 
     map.on("styledata", () => { restoreCustomLayers(map); });
 
-    return () => { map.remove(); mapRef.current = null; };
+    // ResizeObserver covers later layout shifts (orientation change,
+    // address-bar collapse, parent flex changes) so the basemap repaints.
+    const ro = new ResizeObserver(() => { map.resize(); });
+    ro.observe(containerRef.current);
+
+    return () => { ro.disconnect(); map.remove(); mapRef.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultBasemap]);
 
