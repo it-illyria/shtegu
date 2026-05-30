@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import type { Difficulty, Trail } from "@/lib/types";
 import TrailCard from "@/components/TrailCard";
@@ -421,14 +421,18 @@ function TopRatedList({ trails }: { trails: Trail[] }) {
   const [diff, setDiff] = useState<Difficulty | "all">("all");
   const { lang } = useI18n();
 
-  const sorted = [...trails]
-    .filter((t) => diff === "all" || t.difficulty === diff)
-    .sort((a, b) => {
-      const ra = parseFloat((4.0 + (slugHash(a.slug) % 10) * 0.1).toFixed(1));
-      const rb = parseFloat((4.0 + (slugHash(b.slug) % 10) * 0.1).toFixed(1));
-      return rb - ra;
-    })
-    .slice(0, 8);
+  const sorted = useMemo(
+    () =>
+      [...trails]
+        .filter((t) => diff === "all" || t.difficulty === diff)
+        .sort((a, b) => {
+          const ra = parseFloat((4.0 + (slugHash(a.slug) % 10) * 0.1).toFixed(1));
+          const rb = parseFloat((4.0 + (slugHash(b.slug) % 10) * 0.1).toFixed(1));
+          return rb - ra;
+        })
+        .slice(0, 8),
+    [trails, diff],
+  );
 
   return (
     <section className="mt-8">
@@ -570,43 +574,83 @@ export default function HomeClient({
   const [computedAscents, setComputedAscents] = useState<Record<string, number>>({});
   const t = useT();
 
+  // Stable key over the set of slugs that need enrichment. Avoids re-running the
+  // effect whenever `trails` is a new array reference (e.g. parent re-render).
+  // Cap enrichment to the trails actually visible on first paint (hero + recommended
+   // + top rated ~= 8). Bulk-enriching every OSM trail hammers the elevation API and
+   // produced 502s in production.
+  const missingSlugsKey = useMemo(
+    () =>
+      trails
+        .filter((t) => t.ascentM === 0 && t.geometry.length >= 2)
+        .slice(0, 8)
+        .map((t) => t.slug)
+        .join("|"),
+    [trails],
+  );
+
   // Compute elevation for trails that have ascentM === 0 (OSM-imported trails
   // without server-side enrichment). Processes sequentially to be polite to the API.
   useEffect(() => {
-    const missing = trails.filter((t) => t.ascentM === 0 && t.geometry.length >= 2);
-    if (missing.length === 0) return;
+    if (!missingSlugsKey) return;
+    const slugs = missingSlugsKey.split("|");
+    const bySlug = new Map(trails.map((t) => [t.slug, t]));
     const ctrl = new AbortController();
     async function run() {
-      for (const trail of missing) {
+      for (const slug of slugs) {
         if (ctrl.signal.aborted) break;
+        const trail = bySlug.get(slug);
+        if (!trail) continue;
         const profile = await buildElevationProfile(trail.geometry, ctrl.signal);
         if (profile && profile.totalAscentM > 0) {
-          setComputedAscents((prev) => ({ ...prev, [trail.slug]: Math.round(profile.totalAscentM) }));
+          setComputedAscents((prev) =>
+            prev[slug] !== undefined ? prev : { ...prev, [slug]: Math.round(profile.totalAscentM) },
+          );
         }
       }
     }
     void run();
     return () => ctrl.abort();
-  }, [trails]);
+    // bySlug is derived from trails; missingSlugsKey already tracks the relevant subset.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missingSlugsKey]);
 
   // Merge computed ascents back into trail objects so all child components get consistent data.
-  const enrichedTrails = trails.map((t) =>
-    computedAscents[t.slug] !== undefined ? { ...t, ascentM: computedAscents[t.slug] } : t,
+  const enrichedTrails = useMemo(
+    () =>
+      Object.keys(computedAscents).length === 0
+        ? trails
+        : trails.map((t) =>
+            computedAscents[t.slug] !== undefined ? { ...t, ascentM: computedAscents[t.slug] } : t,
+          ),
+    [trails, computedAscents],
   );
 
-  const heroTrails = enrichedTrails.slice(0, 3);
+  const heroTrails = useMemo(() => enrichedTrails.slice(0, 3), [enrichedTrails]);
   const activeFeatured = heroTrails[heroIndex] ?? heroTrails[0];
 
+  // Stable [lng, lat] tuple keyed by slug. Prevents RightPanel's weather effect
+  // from re-firing every render just because the trailhead array got a new ref.
+  const activeTrailhead = useMemo<[number, number] | undefined>(
+    () => (activeFeatured?.trailhead ? [activeFeatured.trailhead[0], activeFeatured.trailhead[1]] : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [activeFeatured?.slug],
+  );
+
   // Filtered trail list for the recommended section
-  const recommended = enrichedTrails.slice(0, 6);
+  const recommended = useMemo(() => enrichedTrails.slice(0, 6), [enrichedTrails]);
 
   // Filtered for search
-  const filtered = query.trim()
-    ? enrichedTrails.filter((trail) => {
-        const q = query.toLowerCase();
-        return trail.name.toLowerCase().includes(q) || trail.region.toLowerCase().includes(q);
-      })
-    : null;
+  const filtered = useMemo(
+    () =>
+      query.trim()
+        ? enrichedTrails.filter((trail) => {
+            const q = query.toLowerCase();
+            return trail.name.toLowerCase().includes(q) || trail.region.toLowerCase().includes(q);
+          })
+        : null,
+    [enrichedTrails, query],
+  );
 
   return (
     <div className="flex flex-1 flex-col overflow-x-clip">
@@ -649,7 +693,7 @@ export default function HomeClient({
           </div>
 
           {/* Right panel */}
-          <RightPanel onPropose={() => setProposeOpen(true)} trailhead={activeFeatured?.trailhead} featuredSlug={activeFeatured?.slug} />
+          <RightPanel onPropose={() => setProposeOpen(true)} trailhead={activeTrailhead} featuredSlug={activeFeatured?.slug} />
         </div>
       )}
 

@@ -1,12 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Trail } from "@/lib/types";
 import DifficultyBadge from "@/components/DifficultyBadge";
 import ElevationProfile from "@/components/ElevationProfile";
 import SeasonCalendar from "@/components/SeasonCalendar";
+import { buildElevationProfile } from "@/lib/elevation";
 import ConditionReport from "@/components/ConditionReport";
 import Reviews from "@/components/Reviews";
 import TrailPhotos from "@/components/TrailPhotos";
@@ -63,6 +64,19 @@ export default function TrailView({ trail }: { trail: Trail }) {
   const { lang, t } = useI18n();
   const [editOpen, setEditOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
+  const [computedAscentM, setComputedAscentM] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (trail.ascentM > 0 || trail.geometry.length < 2) return;
+    const ctrl = new AbortController();
+    void buildElevationProfile(trail.geometry, ctrl.signal).then((p) => {
+      if (ctrl.signal.aborted) return;
+      if (p && p.totalAscentM > 0) setComputedAscentM(Math.round(p.totalAscentM));
+    });
+    return () => ctrl.abort();
+  }, [trail.slug, trail.ascentM, trail.geometry]);
+
+  const ascentM = trail.ascentM > 0 ? trail.ascentM : (computedAscentM ?? 0);
 
   function handleShare() {
     const url = window.location.href;
@@ -102,7 +116,7 @@ export default function TrailView({ trail }: { trail: Trail }) {
           <div className="flex items-center gap-2">
             <button
               onClick={handleShare}
-              className="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+              className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:rounded-full sm:py-1"
               style={{ background: "var(--surface-inset)", color: shareCopied ? "var(--summit-green)" : "var(--text-muted)", border: "1px solid var(--card-border)" }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = shareCopied ? "var(--summit-green)" : "var(--text-muted)"; }}
@@ -111,7 +125,7 @@ export default function TrailView({ trail }: { trail: Trail }) {
             </button>
             <button
               onClick={() => setEditOpen(true)}
-              className="rounded-full px-3 py-1 text-xs font-medium transition-colors"
+              className="rounded-lg px-3 py-1.5 text-xs font-medium transition-colors sm:rounded-full sm:py-1"
               style={{ background: "var(--surface-inset)", color: "var(--text-muted)", border: "1px solid var(--card-border)" }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-muted)"; }}
@@ -129,7 +143,7 @@ export default function TrailView({ trail }: { trail: Trail }) {
       <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {([
           [t.distance, `${trail.distanceKm} km`],
-          [t.ascent,   `${trail.ascentM} m`],
+          [t.ascent,   ascentM > 0 ? `${ascentM} m` : "—"],
           [t.duration, `~${trail.durationHours} h`],
         ] as [string, string][]).map(([k, v]) => (
           <div key={k} className="rounded-xl p-3" style={{ background: "var(--surface-inset)" }}>
@@ -137,7 +151,7 @@ export default function TrailView({ trail }: { trail: Trail }) {
             <dd className="mt-1 text-base font-bold" style={{ color: "var(--text-primary)" }}>{v}</dd>
           </div>
         ))}
-        <div className="rounded-xl p-3" style={{ background: "var(--surface-inset)" }}>
+        <div className="rounded-xl p-3 col-span-2 sm:col-span-1" style={{ background: "var(--surface-inset)" }}>
           <dt className="text-[11px] font-semibold uppercase tracking-[0.06em]" style={{ color: "var(--text-muted)" }}>{t.season}</dt>
           <dd className="mt-2"><SeasonCalendar bestMonths={trail.bestMonths} /></dd>
         </div>
@@ -161,7 +175,7 @@ export default function TrailView({ trail }: { trail: Trail }) {
             <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
               <button
                 onClick={() => downloadGpx(trail)}
-                className="inline-flex h-10 items-center justify-center rounded-full px-3 text-[13px] font-medium transition-colors sm:h-9"
+                className="inline-flex h-10 items-center justify-center rounded-xl px-3 text-[13px] font-medium transition-colors sm:h-9 sm:rounded-full"
                 style={{ background: "var(--surface-inset)", color: "var(--text-muted)", border: "1px solid var(--card-border)" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-primary)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-muted)"; }}
@@ -170,7 +184,7 @@ export default function TrailView({ trail }: { trail: Trail }) {
               </button>
               <Link
                 href={`/activity?trail=${trail.slug}`}
-                className="inline-flex h-10 items-center justify-center rounded-full px-3 text-[13px] font-medium transition-colors sm:h-9"
+                className="inline-flex h-10 items-center justify-center rounded-xl px-3 text-[13px] font-medium transition-colors sm:h-9 sm:rounded-full"
                 style={{ background: "var(--surface-inset)", color: "var(--text-muted)", border: "1px solid var(--card-border)" }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--summit-green)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-muted)"; }}

@@ -54,29 +54,29 @@ export default function GearClient() {
   const progressPct = totalItems > 0 ? (doneCount / totalItems) * 100 : 0;
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-5 py-10">
+    <main className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-5 sm:py-10">
       {/* Back link */}
       <Link href="/" className="text-sm hover:underline" style={{ color: "var(--text-muted)" }}>
         {t.gearBackHome}
       </Link>
 
       {/* Header */}
-      <div className="mt-3 flex items-start justify-between gap-4">
-        <div>
+      <div className="mt-3 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <h1
-            className="font-display text-3xl font-bold tracking-[-0.02em]"
+            className="font-display text-2xl font-bold tracking-[-0.02em] sm:text-3xl"
             style={{ color: "var(--text-primary)" }}
           >
             {t.gearHeading}
           </h1>
-          <p className="mt-1 text-[15px]" style={{ color: "var(--text-muted)" }}>
+          <p className="mt-1 text-[14px] sm:text-[15px]" style={{ color: "var(--text-muted)" }}>
             {t.gearSubheading}
           </p>
         </div>
         {mounted && doneCount > 0 && (
           <button
             onClick={reset}
-            className="mt-1 shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
+            className="mt-1 shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
             style={{ background: "var(--surface-inset)", color: "var(--text-muted)" }}
           >
             {t.gearReset}
@@ -118,16 +118,16 @@ export default function GearClient() {
             >
               {/* Category header */}
               <div
-                className="flex items-center justify-between px-5 py-3.5"
+                className="flex items-center justify-between gap-2 px-4 py-3 sm:px-5 sm:py-3.5"
                 style={{ borderBottom: "1px solid var(--card-border)" }}
               >
-                <div className="flex items-center gap-2.5">
+                <div className="flex min-w-0 items-center gap-2.5">
                   <span className="text-xl leading-none" aria-hidden>{cat.emoji}</span>
-                  <span className="text-[15px] font-semibold" style={{ color: catComplete ? "#4A8A46" : "var(--text-primary)" }}>
+                  <span className="truncate text-[14px] font-semibold sm:text-[15px]" style={{ color: catComplete ? "#4A8A46" : "var(--text-primary)" }}>
                     {lang === "sq" ? cat.sq : cat.en}
                   </span>
                 </div>
-                <span className="text-[12px] font-medium" style={{ color: catComplete ? "#6BA368" : "var(--text-muted)" }}>
+                <span className="shrink-0 text-[12px] font-medium tabular-nums" style={{ color: catComplete ? "#6BA368" : "var(--text-muted)" }}>
                   {mounted ? interp(t.gearItemsOf, { done: catDone, total: cat.items.length }) : `0/${cat.items.length}`}
                 </span>
               </div>
@@ -142,7 +142,7 @@ export default function GearClient() {
                       style={{ borderTop: idx > 0 ? "1px solid var(--card-border)" : undefined }}
                     >
                       <label
-                        className="flex cursor-pointer items-center gap-3 px-5 py-3 transition-colors hover:bg-[var(--hover-overlay)]"
+                        className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--hover-overlay)] sm:px-5"
                       >
                         {/* Custom checkbox */}
                         <span

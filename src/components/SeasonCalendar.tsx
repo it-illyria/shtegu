@@ -36,21 +36,22 @@ function parseSeasonMonths(bestMonths: string): Set<number> {
 export default function SeasonCalendar({ bestMonths }: { bestMonths: string }) {
   const active = parseSeasonMonths(bestMonths);
   if (active.size === 0) {
-    return <span className="text-sm" style={{ color: "var(--text-muted)" }}>{bestMonths || "—"}</span>;
+    const isPlaceholder = !bestMonths || /^todo$/i.test(bestMonths.trim());
+    return <span className="text-sm" style={{ color: "var(--text-muted)" }}>{isPlaceholder ? "—" : bestMonths}</span>;
   }
   return (
-    <div className="flex gap-0.5" aria-label={`Season: ${bestMonths}`}>
+    <div className="grid grid-cols-12 gap-0.5 w-full" aria-label={`Season: ${bestMonths}`}>
       {MONTH_LABELS.map((label, i) => (
-        <div key={i} className="flex flex-col items-center gap-0.5">
+        <div key={i} className="flex flex-col items-center gap-0.5 min-w-0">
           <div
-            className="h-3.5 w-3.5 rounded-sm"
+            className="aspect-square w-full rounded-sm"
             style={{
               background: active.has(i) ? "var(--summit-green)" : "var(--surface-inset)",
               opacity: active.has(i) ? 1 : 0.5,
             }}
           />
           <span
-            className="text-[8px] font-medium leading-none"
+            className="text-[9px] font-medium leading-none"
             style={{ color: active.has(i) ? "var(--summit-green)" : "var(--text-muted)" }}
           >
             {label}

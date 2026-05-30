@@ -216,7 +216,7 @@ export default function ConditionReport({ trailSlug }: { trailSlug: string }) {
           <button
             type="submit"
             disabled={status === "saving" || !selected || authLoading}
-            className="rounded-full px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
+            className="rounded-lg px-4 py-1.5 text-sm font-medium transition-colors disabled:opacity-50"
             style={{ background: "var(--btn-primary)", color: "var(--btn-primary-text)" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--btn-primary-hover)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--btn-primary)"; }}

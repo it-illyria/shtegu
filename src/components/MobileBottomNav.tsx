@@ -26,12 +26,19 @@ const ActivityIcon = () => (
     <path d="M10 6v4.5l2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
-const CommunityIcon = () => (
+const GearIcon = () => (
   <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden>
-    <circle cx="8" cy="7" r="3" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M2 17c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    <circle cx="15" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.3" />
-    <path d="M18 17c0-2.8-1.3-5-3.5-5.8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    <rect x="3" y="2" width="14" height="17" rx="2" stroke="currentColor" strokeWidth="1.4" />
+    <path d="M7 8h6M7 12h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    <path d="M7 5h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+  </svg>
+);
+const CompareIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden>
+    <rect x="2" y="4" width="7" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+    <rect x="11" y="4" width="7" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+    <line x1="5" y1="8" x2="5" y2="13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    <line x1="14" y1="8" x2="14" y2="13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
   </svg>
 );
 
@@ -49,9 +56,10 @@ export default function MobileBottomNav() {
   const navItems: MobileNavItem[] = [
     { href: "/",         label: t.navExplore,   icon: <TrailIcon />,    exact: true },
     { href: "/near-me",  label: t.navNearMe,    icon: <MapIcon /> },
+    { href: "/compare",  label: t.navCompare,   icon: <CompareIcon /> },
+    { href: "/gear",     label: t.navGear,      icon: <GearIcon /> },
     { href: "/saved",    label: t.navSaved,     icon: <SavedIcon /> },
     { href: "/activity", label: t.navActivity,  icon: <ActivityIcon /> },
-    { href: "/feedback", label: t.navCommunity, icon: <CommunityIcon /> },
   ];
 
   function isActive(item: MobileNavItem) {
@@ -75,7 +83,7 @@ export default function MobileBottomNav() {
             key={item.href}
             href={item.href}
             aria-label={item.label}
-            className="flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[11px] font-medium leading-tight transition-colors"
+            className="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-medium leading-tight transition-colors"
             style={{
               color: active ? "var(--summit-green, #2F4F3A)" : "var(--text-muted)",
               minHeight: "60px",
@@ -87,7 +95,7 @@ export default function MobileBottomNav() {
             >
               {item.icon}
             </span>
-            <span>{item.label}</span>
+            <span className="max-w-full truncate">{item.label}</span>
           </Link>
         );
       })}

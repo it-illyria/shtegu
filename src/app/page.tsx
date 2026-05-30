@@ -1,6 +1,9 @@
 import { getTrails } from "@/lib/trails-repo";
 import HomeClient from "./HomeClient";
 
+// Cache SSR responses for 5 minutes; searchParams are still handled per-request.
+export const revalidate = 300;
+
 export default async function Home({
   searchParams,
 }: {

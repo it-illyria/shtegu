@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { getTrail, getTrails } from "@/lib/trails-repo";
 import TrailView from "@/components/TrailView";
 
+// Cache trail detail pages — trail data rarely changes.
+export const revalidate = 3600;
+
 // Prerender known trails at build time; unknown slugs render on demand.
 export async function generateStaticParams() {
   const trails = await getTrails();

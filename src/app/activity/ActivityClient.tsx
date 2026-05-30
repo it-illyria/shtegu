@@ -403,7 +403,7 @@ function ActivityInner({ trails }: { trails: Trail[] }) {
               <button
                 type="submit"
                 disabled={submitting || !selectedSlug}
-                className="inline-flex h-11 items-center justify-center rounded-full px-6 text-sm font-semibold transition-colors disabled:opacity-50 sm:h-9 sm:px-5 sm:font-medium"
+                className="inline-flex h-11 items-center justify-center rounded-xl px-6 text-sm font-semibold transition-colors disabled:opacity-50 sm:h-9 sm:rounded-full sm:px-5 sm:font-medium"
                 style={{ background: "var(--btn-primary)", color: "var(--btn-primary-text)" }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLButtonElement).style.background =

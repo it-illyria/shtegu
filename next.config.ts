@@ -31,10 +31,10 @@ const extraConnect = basemapOrigins.join(" ");
 // styles (no nonce pipeline here). 'unsafe-eval' is added in dev only (HMR).
 const csp = [
   `default-src 'self'`,
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com${isDev ? " 'unsafe-eval'" : ""}`,
   `style-src 'self' 'unsafe-inline'`,
   `img-src 'self' data: blob: https://*.tile.openstreetmap.org https://protomaps.github.io https://*.opentopomap.org https://*.thunderforest.com https://tile.waymarkedtrails.org`,
-  `connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://overpass-api.de https://protomaps.github.io https://*.tile.openstreetmap.org https://formspree.io https://*.opentopomap.org https://*.thunderforest.com https://tile.waymarkedtrails.org https://tiles.mapillary.com${extraConnect ? " " + extraConnect : ""}`,
+  `connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://overpass-api.de https://protomaps.github.io https://*.tile.openstreetmap.org https://formspree.io https://*.opentopomap.org https://*.thunderforest.com https://tile.waymarkedtrails.org https://tiles.mapillary.com https://va.vercel-scripts.com https://vitals.vercel-insights.com${extraConnect ? " " + extraConnect : ""}`,
   `worker-src 'self' blob:`,
   `child-src 'self' blob:`,
   `font-src 'self' data:`,

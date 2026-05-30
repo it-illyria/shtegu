@@ -89,7 +89,7 @@ export default function AuthButton({ compact = false }: Props) {
                 <button
                   type="button"
                   onClick={() => { setOpen(false); void signOut(); }}
-                  className="inline-flex h-10 items-center justify-center rounded-full border text-sm font-medium transition-colors"
+                  className="inline-flex h-10 items-center justify-center rounded-lg border text-sm font-medium transition-colors"
                   style={{ borderColor: "var(--card-border)", color: "var(--text-primary)" }}
                 >
                   {t.authSignOut}
@@ -114,7 +114,7 @@ export default function AuthButton({ compact = false }: Props) {
                 <button
                   type="submit"
                   disabled={status === "sending"}
-                  className="inline-flex h-10 items-center justify-center rounded-full text-sm font-semibold transition-colors disabled:opacity-50"
+                  className="inline-flex h-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
                   style={{ background: "var(--btn-primary)", color: "var(--btn-primary-text)" }}
                 >
                   {status === "sending" ? t.authSending : t.authSendMagicLink}
@@ -138,7 +138,7 @@ export default function AuthButton({ compact = false }: Props) {
         <button
           type="button"
           onClick={() => void signOut()}
-          className="rounded-full border px-3 py-1 text-xs font-medium transition-colors"
+          className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors"
           style={{
             borderColor: "var(--card-border)",
             color: "var(--text-primary)",
@@ -175,7 +175,7 @@ export default function AuthButton({ compact = false }: Props) {
       <button
         type="submit"
         disabled={status === "sending"}
-        className="rounded-full px-3 py-1 text-xs font-medium disabled:opacity-50 transition-colors"
+        className="rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-50 transition-colors"
         style={{ background: "var(--btn-primary)", color: "var(--btn-primary-text)" }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--btn-primary-hover)"; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--btn-primary)"; }}

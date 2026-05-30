@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
 
@@ -38,9 +38,14 @@ export function useBookmarks(): {
   // Track whether we've already migrated localStorage → DB for this user session
   const migratedRef = useRef<string | null>(null);
 
-  // Signed-in (non-anonymous) DB user
-  const signedInUser =
-    user && !user.is_anonymous ? user : null;
+  // Signed-in (non-anonymous) DB user — key off the ID so the effect doesn't
+  // refire just because `user` is a new object reference each render.
+  const signedInUserId =
+    user && !user.is_anonymous ? user.id : null;
+  const signedInUser = useMemo(
+    () => (signedInUserId ? { id: signedInUserId } : null),
+    [signedInUserId],
+  );
 
   // ── Load bookmarks ────────────────────────────────────────────────────────
 
@@ -91,7 +96,7 @@ export function useBookmarks(): {
     }
 
     void load();
-  }, [authLoading, signedInUser]);
+  }, [authLoading, signedInUserId]);
 
   // ── Toggle ────────────────────────────────────────────────────────────────
 
@@ -113,7 +118,7 @@ export function useBookmarks(): {
 
       void (async () => {
         // Ensure we have a session (same pattern as Reviews.tsx)
-        let userId = signedInUser?.id;
+        let userId = signedInUserId;
         if (!userId) {
           const { data: sessionData } = await supabase!.auth.getSession();
           userId = sessionData.session?.user?.id;
@@ -144,7 +149,7 @@ export function useBookmarks(): {
         }
       })();
     },
-    [signedInUser],
+    [signedInUserId],
   );
 
   return { bookmarks, toggle, loading: authLoading || loading };

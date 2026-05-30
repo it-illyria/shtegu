@@ -129,6 +129,7 @@ export interface Dictionary {
 
   // Map
   trailhead: string;
+  destination: string;
   downloadOfflineMap: string;
   downloading: string;
   offlineMapReady: string;

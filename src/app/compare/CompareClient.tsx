@@ -160,33 +160,64 @@ function CompareTable({ a, b, lang, ascentA, ascentB }: {
   ];
 
   return (
-    <div className="overflow-hidden rounded-2xl" style={{ border: "1px solid var(--card-border)" }}>
-      {/* Header row */}
-      <div className="grid grid-cols-3" style={{ borderBottom: "1px solid var(--card-border)" }}>
-        <div className="px-4 py-3" style={{ background: "var(--surface-inset)", borderRight: "1px solid var(--card-border)" }} />
-        {[a, b].map((tr, i) => (
-          <div key={tr.slug} className="px-4 py-3" style={{ background: "var(--surface-inset)", borderRight: i === 0 ? "1px solid var(--card-border)" : undefined }}>
-            <p className="truncate text-sm font-bold" style={{ color: "var(--text-primary)" }}>{name(tr, lang)}</p>
-            <p className="mt-0.5 truncate text-[11px]" style={{ color: "var(--text-muted)" }}>{region(tr, lang)}</p>
+    <>
+      {/* Mobile: two stacked cards, one per trail */}
+      <div className="flex flex-col gap-4 sm:hidden">
+        {[a, b].map((tr, idx) => {
+          const ascent = idx === 0 ? ascentA : ascentB;
+          return (
+            <div key={tr.slug} className="overflow-hidden rounded-2xl" style={{ border: "1px solid var(--card-border)", background: "var(--card-bg)" }}>
+              <div className="px-4 py-3" style={{ background: "var(--surface-inset)", borderBottom: "1px solid var(--card-border)" }}>
+                <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
+                  {idx === 0 ? t.comparePickFirst : t.comparePickSecond}
+                </p>
+                <p className="mt-0.5 truncate text-base font-bold" style={{ color: "var(--text-primary)" }}>{name(tr, lang)}</p>
+                <p className="text-[12px]" style={{ color: "var(--text-muted)" }}>{region(tr, lang)}</p>
+              </div>
+              <dl>
+                {rows.map((row, rIdx) => (
+                  <div key={row.label} className="grid grid-cols-[40%_60%]" style={{ borderTop: rIdx > 0 ? "1px solid var(--card-border)" : undefined }}>
+                    <dt className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide" style={{ background: "var(--surface-inset)", color: "var(--text-muted)" }}>
+                      {row.label}
+                    </dt>
+                    <dd className="px-4 py-2.5 text-sm" style={{ color: "var(--text-primary)" }}>
+                      {idx === 0 ? row.cellA : row.cellB}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop: side-by-side comparison table */}
+      <div className="hidden overflow-hidden rounded-2xl sm:block" style={{ border: "1px solid var(--card-border)" }}>
+        <div className="grid grid-cols-3" style={{ borderBottom: "1px solid var(--card-border)" }}>
+          <div className="px-4 py-3" style={{ background: "var(--surface-inset)", borderRight: "1px solid var(--card-border)" }} />
+          {[a, b].map((tr, i) => (
+            <div key={tr.slug} className="px-4 py-3" style={{ background: "var(--surface-inset)", borderRight: i === 0 ? "1px solid var(--card-border)" : undefined }}>
+              <p className="truncate text-sm font-bold" style={{ color: "var(--text-primary)" }}>{name(tr, lang)}</p>
+              <p className="mt-0.5 truncate text-[11px]" style={{ color: "var(--text-muted)" }}>{region(tr, lang)}</p>
+            </div>
+          ))}
+        </div>
+
+        {rows.map((row, idx) => (
+          <div key={row.label} className="grid grid-cols-3" style={{ borderBottom: idx < rows.length - 1 ? "1px solid var(--card-border)" : undefined }}>
+            <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ background: "var(--surface-inset)", color: "var(--text-muted)", borderRight: "1px solid var(--card-border)" }}>
+              {row.label}
+            </div>
+            <div className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)", background: "var(--card-bg)", borderRight: "1px solid var(--card-border)" }}>
+              {row.cellA}
+            </div>
+            <div className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)", background: "var(--card-bg)" }}>
+              {row.cellB}
+            </div>
           </div>
         ))}
       </div>
-
-      {/* Data rows */}
-      {rows.map((row, idx) => (
-        <div key={row.label} className="grid grid-cols-3" style={{ borderBottom: idx < rows.length - 1 ? "1px solid var(--card-border)" : undefined }}>
-          <div className="px-4 py-3 text-xs font-semibold uppercase tracking-wide" style={{ background: "var(--surface-inset)", color: "var(--text-muted)", borderRight: "1px solid var(--card-border)" }}>
-            {row.label}
-          </div>
-          <div className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)", background: "var(--card-bg)", borderRight: "1px solid var(--card-border)" }}>
-            {row.cellA}
-          </div>
-          <div className="px-4 py-3 text-sm" style={{ color: "var(--text-primary)", background: "var(--card-bg)" }}>
-            {row.cellB}
-          </div>
-        </div>
-      ))}
-    </div>
+    </>
   );
 }
 
@@ -227,7 +258,7 @@ export default function CompareClient({ trails }: { trails: Trail[] }) {
   const bothSelected = trailA !== null && trailB !== null;
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
+    <main className="mx-auto w-full max-w-4xl px-3 py-6 sm:px-6 sm:py-8">
       {/* Header */}
       <Link
         href="/"
@@ -237,7 +268,7 @@ export default function CompareClient({ trails }: { trails: Trail[] }) {
         {t.compareBackHome}
       </Link>
       <div className="mt-3 mb-2">
-        <h1 className="font-display text-3xl font-bold tracking-[-0.02em]" style={{ color: "var(--text-primary)" }}>
+        <h1 className="font-display text-2xl font-bold tracking-[-0.02em] sm:text-3xl" style={{ color: "var(--text-primary)" }}>
           {t.compareHeading}
         </h1>
         <p className="mt-1 text-[15px]" style={{ color: "var(--text-muted)" }}>{t.compareSubheading}</p>

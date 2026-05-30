@@ -141,6 +141,11 @@ export default function TrailMap({ trail, userPosition, className }: Props) {
       .setLngLat(trail.trailhead)
       .setPopup(new maplibregl.Popup().setText(t.trailhead))
       .addTo(map);
+    const endCoord = trail.geometry[trail.geometry.length - 1] as [number, number];
+    new maplibregl.Marker({ color: "#C0392B" })
+      .setLngLat(endCoord)
+      .setPopup(new maplibregl.Popup().setText(t.destination))
+      .addTo(map);
     const bounds = trail.geometry.reduce(
       (b, c) => b.extend(c as [number, number]),
       new maplibregl.LngLatBounds(trail.geometry[0] as [number, number], trail.geometry[0] as [number, number]),
@@ -371,7 +376,7 @@ export default function TrailMap({ trail, userPosition, className }: Props) {
           type="button"
           onClick={handleDownload}
           disabled={offline.state === "downloading"}
-          className="absolute left-2 top-2 z-10 rounded-full px-3 py-1.5 text-xs font-medium shadow backdrop-blur disabled:opacity-60 transition-colors"
+          className="absolute left-2 top-2 z-10 rounded-lg px-3 py-1.5 text-xs font-medium shadow backdrop-blur disabled:opacity-60 transition-colors"
           style={{ background: "var(--overlay-bg)", color: "var(--overlay-text)", outline: "1px solid var(--overlay-border)" }}
         >
           {offline.state === "downloading" ? t.downloading

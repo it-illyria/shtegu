@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { trails as seedTrails, getTrail as getSeedTrail } from "@/data/trails";
 import type { Trail } from "@/lib/types";
@@ -100,9 +101,22 @@ interface TrailRow {
   trailhead_geojson: { coordinates: [number, number] };
 }
 
+function deriveBestMonths(terrain: "alpine" | "coastal" | "inland"): string {
+  if (terrain === "alpine") return "June–September (snow possible outside)";
+  if (terrain === "coastal") return "March–November";
+  return "April–October";
+}
+
+function isPlaceholderMonths(s: string | null | undefined): boolean {
+  return !s || /^todo$/i.test(s.trim());
+}
+
 function rowToTrail(r: TrailRow): Trail {
   const distanceKm = Number(r.distance_km);
   const terrain = terrainFromRegion(r.region);
+  const bestMonths = isPlaceholderMonths(r.best_months)
+    ? deriveBestMonths(terrain)
+    : (r.best_months as string);
   return {
     slug: r.slug,
     name: r.name,
@@ -112,7 +126,7 @@ function rowToTrail(r: TrailRow): Trail {
     distanceKm,
     ascentM: r.ascent_m,
     durationHours: Number(r.duration_h),
-    bestMonths: r.best_months ?? "",
+    bestMonths,
     logistics: r.logistics ?? [],
     source: r.source ?? undefined,
     geometry: r.route_geojson.coordinates,
@@ -121,7 +135,7 @@ function rowToTrail(r: TrailRow): Trail {
       name: r.name_sq ?? undefined,
       region: REGION_SQ[r.region],
       summary: deriveSummarySq(distanceKm, r.ascent_m, r.region, r.difficulty),
-      bestMonths: r.best_months ? translateBestMonths(r.best_months) : undefined,
+      bestMonths: translateBestMonths(bestMonths),
       logistics: deriveLogisticsSq(terrain),
     },
   };
@@ -131,7 +145,10 @@ function rowToTrail(r: TrailRow): Trail {
 const COLUMNS =
   "slug,name,region,summary,difficulty,distance_km,ascent_m,duration_h,best_months,logistics,source,route_geojson,trailhead_geojson";
 
-export async function getTrails(): Promise<Trail[]> {
+// Wrapped in React `cache()` so multiple calls within a single server render
+// are deduped (e.g. `generateMetadata` + page body both calling `getTrail`).
+
+export const getTrails = cache(async (): Promise<Trail[]> => {
   if (!isSupabaseConfigured || !supabase) return seedTrails;
   const { data, error } = await supabase
     .from("trails")
@@ -142,9 +159,9 @@ export async function getTrails(): Promise<Trail[]> {
     return seedTrails;
   }
   return (data as unknown as TrailRow[]).map(rowToTrail);
-}
+});
 
-export async function getTrail(slug: string): Promise<Trail | undefined> {
+export const getTrail = cache(async (slug: string): Promise<Trail | undefined> => {
   if (!isSupabaseConfigured || !supabase) return getSeedTrail(slug);
   const { data, error } = await supabase
     .from("trails")
@@ -156,14 +173,14 @@ export async function getTrail(slug: string): Promise<Trail | undefined> {
     return getSeedTrail(slug);
   }
   return rowToTrail(data as unknown as TrailRow);
-}
+});
 
 /** Trails near a [lng, lat] point, nearest first. Seed mode returns all. */
-export async function getTrailsNearby(
+export const getTrailsNearby = cache(async (
   lng: number,
   lat: number,
   radiusM = 50000,
-): Promise<Trail[]> {
+): Promise<Trail[]> => {
   if (!isSupabaseConfigured || !supabase) return seedTrails;
   const { data, error } = await supabase.rpc("trails_nearby", {
     lng,
@@ -175,4 +192,4 @@ export async function getTrailsNearby(
     return seedTrails;
   }
   return (data as unknown as TrailRow[]).map(rowToTrail);
-}
+});
