@@ -118,10 +118,10 @@ export function useBookmarks(): {
 
       void (async () => {
         // Ensure we have a session (same pattern as Reviews.tsx)
-        let userId = signedInUserId;
+        let userId: string | null = signedInUserId;
         if (!userId) {
           const { data: sessionData } = await supabase!.auth.getSession();
-          userId = sessionData.session?.user?.id;
+          userId = sessionData.session?.user?.id ?? null;
         }
         if (!userId) {
           // Anonymous bookmark — already stored in localStorage; skip DB
