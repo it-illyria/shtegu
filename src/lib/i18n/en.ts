@@ -139,6 +139,8 @@ const en: Dictionary = {
 
   // Map
   trailhead: "Trailhead",
+  trailStartLabel: "START",
+  trailEndLabel: "FINISH",
   destination: "Destination",
   downloadOfflineMap: "Download offline map",
   downloading: "Downloading…",

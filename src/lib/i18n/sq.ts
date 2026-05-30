@@ -140,6 +140,8 @@ const sq: Dictionary = {
   // Map
   trailhead: "Fillimi i shtegut",
   destination: "Destinacioni",
+  trailStartLabel: "FILLIMI",
+  trailEndLabel: "MBARIMI",
   downloadOfflineMap: "Shkarko hartën offline",
   downloading: "Duke shkarkuar…",
   offlineMapReady: "Harta offline gati ✓",

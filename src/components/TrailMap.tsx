@@ -137,14 +137,23 @@ export default function TrailMap({ trail, userPosition, className }: Props) {
         paint: { "line-color": "#C0392B", "line-width": 4 },
       });
     }
-    new maplibregl.Marker({ color: "#2D6A4F" })
+    function makeEndpointMarker(label: string, bg: string, glyph: string): HTMLDivElement {
+      const el = document.createElement("div");
+      el.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:auto;transform:translateY(-6px);";
+      el.innerHTML =
+        `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:${bg};color:#fff;font-size:14px;font-weight:700;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.35);">${glyph}</div>` +
+        `<div style="background:${bg};color:#fff;font-size:10px;font-weight:700;letter-spacing:0.05em;padding:1px 6px;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,0.25);white-space:nowrap;">${label}</div>`;
+      return el;
+    }
+
+    new maplibregl.Marker({ element: makeEndpointMarker(t.trailStartLabel, "#2D6A4F", "▶"), anchor: "bottom" })
       .setLngLat(trail.trailhead)
-      .setPopup(new maplibregl.Popup().setText(t.trailhead))
+      .setPopup(new maplibregl.Popup({ offset: 8 }).setText(t.trailhead))
       .addTo(map);
     const endCoord = trail.geometry[trail.geometry.length - 1] as [number, number];
-    new maplibregl.Marker({ color: "#C0392B" })
+    new maplibregl.Marker({ element: makeEndpointMarker(t.trailEndLabel, "#C0392B", "■"), anchor: "bottom" })
       .setLngLat(endCoord)
-      .setPopup(new maplibregl.Popup().setText(t.destination))
+      .setPopup(new maplibregl.Popup({ offset: 8 }).setText(t.destination))
       .addTo(map);
     const bounds = trail.geometry.reduce(
       (b, c) => b.extend(c as [number, number]),
