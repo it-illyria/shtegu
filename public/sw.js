@@ -24,9 +24,25 @@
 // whole-archive cache (handled below) is what makes the map render offline. The
 // per-tile entries are a region-scoped store served here for any consumer that
 // fetches tiles by `/{z}/{x}/{y}` path.
-const CACHE = "shtegu-v1";
+// Bumped v1 -> v2 to evict any entries possibly poisoned by the previously
+// unvalidated CACHE_OFFLINE_MAP handler. On activate, all non-matching caches
+// are deleted, forcing clients to re-fetch from trusted origins.
+const CACHE = "shtegu-v2";
 const PMTILES_TILE_PREFIX = "/__pmtiles_tile";
 const APP_SHELL = ["/", "/icon.svg", "/manifest.webmanifest"];
+
+// Allowlist of hosts that CACHE_OFFLINE_MAP messages are permitted to cache.
+// If your deployment serves PMTiles from a different host (see PMTILES_URL env
+// / src/lib/basemap.ts PROTOMAPS_ASSETS_HOST), add that host here BY HAND —
+// the service worker cannot read env vars at runtime.
+const ALLOWED_CACHE_HOSTS = new Set([
+  self.location.host,            // same-origin (/maps/*.pmtiles, app assets)
+  "protomaps.github.io",         // glyphs/sprites (PROTOMAPS_ASSETS_HOST)
+  "tile.openstreetmap.org",      // OSM raster tiles
+]);
+
+const MAX_CACHE_URLS = 50;
+const MAX_TOTAL_BYTES = 250 * 1024 * 1024; // 250 MB
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -58,14 +74,64 @@ self.addEventListener("message", (event) => {
     if (port) port.postMessage(payload);
   };
 
+  // Verify the message came from a same-origin window client. Without this,
+  // any frame that managed to postMessage to the SW could trigger caching.
+  // Note: event.source may be null for some message sources; in that case we
+  // refuse rather than fail open. WindowClient exposes .url; if it doesn't,
+  // skip the check with a comment and rely on the host/size validation below.
+  const source = event.source;
+  if (!source || typeof source.url !== "string") {
+    reply({ ok: false, error: "untrusted source" });
+    return;
+  }
+  try {
+    if (new URL(source.url).origin !== self.location.origin) {
+      reply({ ok: false, error: "cross-origin source rejected" });
+      return;
+    }
+  } catch {
+    reply({ ok: false, error: "invalid source url" });
+    return;
+  }
+
+  // Validate urls: must be an array of strings, bounded length, allowlisted hosts.
+  const urls = data.urls;
+  if (!Array.isArray(urls) || !urls.every((u) => typeof u === "string")) {
+    reply({ ok: false, error: "urls must be an array of strings" });
+    return;
+  }
+  if (urls.length > MAX_CACHE_URLS) {
+    reply({ ok: false, error: `too many urls (max ${MAX_CACHE_URLS})` });
+    return;
+  }
+  for (const u of urls) {
+    let parsed;
+    try {
+      parsed = new URL(u);
+    } catch {
+      reply({ ok: false, error: `invalid url: ${u}` });
+      return;
+    }
+    if (!ALLOWED_CACHE_HOSTS.has(parsed.host)) {
+      reply({ ok: false, error: `host not allowed: ${parsed.host}` });
+      return;
+    }
+  }
+
   event.waitUntil(
     caches
       .open(CACHE)
       .then(async (cache) => {
-        for (const url of data.urls || []) {
+        let totalBytes = 0;
+        for (const url of urls) {
           // PMTiles archives are large; fetch the whole file once and store it.
           const res = await fetch(url, { cache: "reload" });
           if (!res.ok) throw new Error(`Failed to fetch ${url} (${res.status})`);
+          const len = Number(res.headers.get("content-length") || 0);
+          totalBytes += len;
+          if (totalBytes > MAX_TOTAL_BYTES) {
+            throw new Error("cache budget exceeded");
+          }
           await cache.put(url, res.clone());
         }
         reply({ ok: true });
@@ -105,7 +171,12 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((res) => {
-          caches.open(CACHE).then((c) => c.put(request, res.clone()));
+          // Only cache successful, same-origin, non-redirect responses. This
+          // avoids persisting error pages, opaque cross-origin redirects, or
+          // attacker-controlled redirected content under a trusted URL key.
+          if (res.ok && res.type === "basic") {
+            caches.open(CACHE).then((c) => c.put(request, res.clone()));
+          }
           return res;
         })
         .catch(() => caches.match(request).then((r) => r ?? caches.match("/"))),

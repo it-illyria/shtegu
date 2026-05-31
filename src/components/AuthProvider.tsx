@@ -22,6 +22,12 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
 }
 
+// Hardcoded production origin so a malicious clone can't have the magic
+// link redirect to its own domain. Override locally via NEXT_PUBLIC_AUTH_REDIRECT_ORIGIN.
+const AUTH_REDIRECT_ORIGIN =
+  process.env.NEXT_PUBLIC_AUTH_REDIRECT_ORIGIN?.trim() ||
+  "https://shtegu.vercel.app";
+
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export default function AuthProvider({
@@ -68,10 +74,7 @@ export default function AuthProvider({
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo:
-            typeof window !== "undefined"
-              ? window.location.origin
-              : undefined,
+          emailRedirectTo: AUTH_REDIRECT_ORIGIN,
         },
       });
       return { error: error?.message ?? null };

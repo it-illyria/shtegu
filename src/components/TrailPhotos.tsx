@@ -29,7 +29,18 @@ export default function TrailPhotos({ trailSlug }: { trailSlug: string }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [name, setName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Seed the uploader name from a saved username (any device). Users can edit
+  // it freely before uploading. We never use the email prefix here, since
+  // photos are public and the email prefix is PII.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("shtegu_username");
+      if (saved) setName(saved);
+    } catch {}
+  }, []);
 
   const load = useCallback(async () => {
     if (!supabase) return;
@@ -89,10 +100,8 @@ export default function TrailPhotos({ trailSlug }: { trailSlug: string }) {
       return;
     }
 
-    const uploaderName =
-      user && !user.is_anonymous && user.email
-        ? user.email.split("@")[0]
-        : "Anonymous";
+    const uploaderName = name.trim() || t.reviewsAnonymous;
+    try { localStorage.setItem("shtegu_username", uploaderName); } catch {}
 
     const { error: dbError } = await supabase.from("trail_photos").insert({
       trail_slug: trailSlug,
@@ -115,6 +124,20 @@ export default function TrailPhotos({ trailSlug }: { trailSlug: string }) {
 
   return (
     <div className="mt-3">
+      {/* Uploader name (saved to localStorage; never derived from email) */}
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder={t.reviewsNamePlaceholder}
+        maxLength={60}
+        className="mb-2 w-full rounded-lg border px-3 py-1.5 text-sm sm:max-w-xs"
+        style={{
+          borderColor: "var(--input-border)",
+          background: "var(--input-bg)",
+          color: "var(--input-text)",
+        }}
+      />
+
       {/* Upload row */}
       <div className="flex items-center gap-3">
         <input
