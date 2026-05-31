@@ -114,6 +114,10 @@ export default function TrailMap({ trail, userPosition, className }: Props) {
   function styleForBase(id: BaseId, fallback: BasemapChoice): string | import("maplibre-gl").StyleSpecification {
     if (id === "topo") return OPENTOPO_STYLE;
     if (id === "outdoors" && TF_KEY) return thunderforestOutdoorsStyle(TF_KEY);
+    // The "Standard" basemap intentionally uses OSM raster — the configured
+    // PMTiles/style URL has been producing blank canvases in production, and
+    // OSM is universally reachable and renders consistently on every device.
+    if (id === "default") return OSM_STYLE;
     return fallback.kind === "styleUrl" ? fallback.style : fallback.style;
   }
 
