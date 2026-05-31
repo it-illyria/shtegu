@@ -22,6 +22,7 @@ const REGIONS = [
   "Rajoni Juglindor",
   "Rajoni Jugor",
 ] as const;
+type RegionZone = (typeof REGIONS)[number];
 
 const REGION_COLOR: Record<string, string> = {
   "Rajoni Verior & Verilindor": "#3B82F6",
@@ -29,6 +30,32 @@ const REGION_COLOR: Record<string, string> = {
   "Rajoni Juglindor":           "#F59E0B",
   "Rajoni Jugor":               "#F43F5E",
 };
+
+/**
+ * Map a trail's free-form region string (English or Albanian) onto one of the
+ * four high-level zones used by the filter UI. Returns null when nothing
+ * matches — those trails only show up under "All regions".
+ */
+function zoneForRegion(region: string): RegionZone | null {
+  const r = region.toLowerCase();
+  // North & Northeast: Albanian Alps, Kukës, Has, Dibër, Korab
+  if (/alp|accursed|bjeshk|kuk[eë]s|has|dib[eë]r|korab|koritnik|gjallica|bicaj|northern|verior|verilindor/.test(r)) {
+    return "Rajoni Verior & Verilindor";
+  }
+  // Southern: Ionian/Riviera, Llogara, Sarandë, Vlorë, Himarë
+  if (/ionian|riviera|llogara|sarand|vlor|himar|jugor|jonian/.test(r)) {
+    return "Rajoni Jugor";
+  }
+  // Southeast: Korçë, Përmet, Gjirokastër
+  if (/kor[cç][eë]|p[eë]rmet|gjirokast|juglindor/.test(r)) {
+    return "Rajoni Juglindor";
+  }
+  // Western: Tirana, Durrës, Adriatic, Dajti, Erzen, Central Albania
+  if (/tiran|durr|adriatic|dajti|erzen|central albania|qendr|per[eë]ndimor/.test(r)) {
+    return "Rajoni Perëndimor";
+  }
+  return null;
+}
 
 const PAGE_SIZE = 12;
 
@@ -45,7 +72,7 @@ export default function TrailList({ trails, query = "" }: { trails: Trail[]; que
     const q = query.trim().toLowerCase();
     return trails.filter((trail) => {
       if (diff   !== "all" && trail.difficulty !== diff)   return false;
-      if (region !== "all" && trail.region     !== region) return false;
+      if (region !== "all" && zoneForRegion(trail.region) !== region) return false;
       if (!q) return true;
       const name_    = lang === "sq" && trail.sq?.name    ? trail.sq.name    : trail.name;
       const reg_     = lang === "sq" && trail.sq?.region  ? trail.sq.region  : trail.region;
