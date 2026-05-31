@@ -2,7 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import { useT } from "@/lib/i18n/context";
+import { useT, interp } from "@/lib/i18n/context";
+
+const COOLDOWN_MS = 60_000;
+
+function lastSendTs(email: string): number {
+  try { return Number(localStorage.getItem(`shtegu_otp_last:${email.toLowerCase()}`) || 0); } catch { return 0; }
+}
+function markSendTs(email: string) {
+  try { localStorage.setItem(`shtegu_otp_last:${email.toLowerCase()}`, String(Date.now())); } catch {}
+}
 
 function PersonIcon() {
   return (
@@ -25,9 +34,24 @@ export default function AuthButton({ compact = false }: Props) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
 
   const signedIn = Boolean(user && !user.is_anonymous);
+
+  // Live countdown for the resend cooldown.
+  useEffect(() => {
+    if (cooldownLeft <= 0) return;
+    const id = setInterval(() => {
+      const trimmed = email.trim();
+      if (!trimmed) { setCooldownLeft(0); return; }
+      const since = Date.now() - lastSendTs(trimmed);
+      const left = Math.max(0, Math.ceil((COOLDOWN_MS - since) / 1000));
+      setCooldownLeft(left);
+      if (left <= 0) clearInterval(id);
+    }, 1000);
+    return () => clearInterval(id);
+  }, [cooldownLeft, email]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -45,13 +69,32 @@ export default function AuthButton({ compact = false }: Props) {
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
-    if (email.trim().length === 0) return;
+    const trimmed = email.trim();
+    if (trimmed.length === 0) return;
+    const since = Date.now() - lastSendTs(trimmed);
+    if (since < COOLDOWN_MS) {
+      const secondsLeft = Math.ceil((COOLDOWN_MS - since) / 1000);
+      setStatus("error");
+      setError(interp(t.authCooldown, { seconds: secondsLeft }));
+      setCooldownLeft(secondsLeft);
+      return;
+    }
     setStatus("sending");
     setError(null);
-    const { error: err } = await signInWithEmail(email.trim());
+    const { error: err } = await signInWithEmail(trimmed);
     if (err) { setError(err); setStatus("error"); return; }
+    markSendTs(trimmed);
+    setCooldownLeft(Math.ceil(COOLDOWN_MS / 1000));
     setStatus("sent");
   }
+
+  const sendDisabled = status === "sending" || cooldownLeft > 0;
+  const sendLabel =
+    status === "sending"
+      ? t.authSending
+      : cooldownLeft > 0
+        ? interp(t.authCooldown, { seconds: cooldownLeft })
+        : t.authSendMagicLink;
 
   // ── Compact (mobile header) ───────────────────────────────────────────────
   if (compact) {
@@ -103,6 +146,8 @@ export default function AuthButton({ compact = false }: Props) {
               <form onSubmit={send} className="flex flex-col gap-2">
                 <input
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={t.authEmailPlaceholder}
@@ -113,11 +158,11 @@ export default function AuthButton({ compact = false }: Props) {
                 />
                 <button
                   type="submit"
-                  disabled={status === "sending"}
+                  disabled={sendDisabled}
                   className="inline-flex h-10 items-center justify-center rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
                   style={{ background: "var(--btn-primary)", color: "var(--btn-primary-text)" }}
                 >
-                  {status === "sending" ? t.authSending : t.authSendMagicLink}
+                  {sendLabel}
                 </button>
                 {status === "error" && (
                   <span className="text-xs" style={{ color: "var(--danger-text)" }}>{error ?? t.authError}</span>
@@ -165,6 +210,8 @@ export default function AuthButton({ compact = false }: Props) {
     <form onSubmit={send} className="flex items-center gap-2">
       <input
         type="email"
+        inputMode="email"
+        autoComplete="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder={t.authEmailPlaceholder}
@@ -174,13 +221,13 @@ export default function AuthButton({ compact = false }: Props) {
       />
       <button
         type="submit"
-        disabled={status === "sending"}
+        disabled={sendDisabled}
         className="rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-50 transition-colors"
         style={{ background: "var(--btn-primary)", color: "var(--btn-primary-text)" }}
         onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--btn-primary-hover)"; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--btn-primary)"; }}
       >
-        {status === "sending" ? t.authSending : t.authSendMagicLink}
+        {sendLabel}
       </button>
       {status === "error" && (
         <span className="text-xs" style={{ color: "var(--danger-text)" }}>{error ?? t.authError}</span>

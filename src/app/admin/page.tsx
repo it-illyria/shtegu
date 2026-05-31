@@ -7,7 +7,9 @@ export const metadata: Metadata = {
   title: "Admin — Shtegu",
 };
 
-const ADMIN_EMAILS = ["juni.93.juni@gmail.com"];
+// Admin identity is now sourced from public.admins (see migration 0016).
+// This removes the previous email-based allowlist, which was vulnerable to
+// JWT 'email' claim spoofing via supabase.auth.updateUser({email}).
 
 export default async function AdminPage() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -43,7 +45,20 @@ export default async function AdminPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || !ADMIN_EMAILS.includes(user.email ?? "")) {
+  // Check admin membership against public.admins by UUID. RLS on public.admins
+  // allows users to read their own row only, so a non-admin's query returns
+  // zero rows.
+  let isAdmin = false;
+  if (user) {
+    const { data: adminRow } = await supabase
+      .from("admins")
+      .select("user_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    isAdmin = !!adminRow;
+  }
+
+  if (!user || !isAdmin) {
     return (
       <main className="flex flex-1 items-center justify-center p-8">
         <div

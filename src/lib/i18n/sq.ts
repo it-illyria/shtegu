@@ -201,6 +201,7 @@ const sq: Dictionary = {
   authSending: "Duke dërguar…",
   authCheckInbox: "Kontrolloni kutinë tuaj postare për një lidhje magjike.",
   authError: "Provoni përsëri.",
+  authCooldown: "Prisni {seconds}s para se të ridërgoni",
 
   // Theme toggle
   themeSwitchLight: "Kaloni në modalitetin e ndritshëm",

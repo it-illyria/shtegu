@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
 import { useI18n, interp } from "@/lib/i18n/context";
@@ -43,6 +43,16 @@ export default function TrailProposalModal({ onClose }: Props) {
   const [bestMonths, setBestMonths] = useState("");
   const [logistics,  setLogistics]  = useState("");
   const [notes,      setNotes]      = useState("");
+  const [authorName, setAuthorName] = useState("");
+
+  // Seed username from localStorage (any device). Never derive from email — that
+  // would leak PII into the public trail_proposals row.
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("shtegu_username");
+      if (saved) setAuthorName(saved);
+    } catch {}
+  }, []);
 
   const [routeCoords, setRouteCoords] = useState<[number, number][] | null>(null);
   const [fileName,    setFileName]    = useState<string | null>(null);
@@ -51,10 +61,6 @@ export default function TrailProposalModal({ onClose }: Props) {
   const [status, setStatus] = useState<"idle" | "saving" | "done" | "error">("idle");
 
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const signedIn = Boolean(user && !user.is_anonymous);
-  const contributorName =
-    signedIn && user?.email ? user.email.split("@")[0] : "Anonymous";
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -83,6 +89,9 @@ export default function TrailProposalModal({ onClose }: Props) {
     e.preventDefault();
     if (!supabase || !name.trim()) return;
     setStatus("saving");
+
+    const contributorName = authorName.trim() || t.reviewsAnonymous;
+    try { localStorage.setItem("shtegu_username", contributorName); } catch {}
 
     const logArr = logistics.split("\n").map((s) => s.trim()).filter(Boolean);
 
@@ -179,6 +188,18 @@ export default function TrailProposalModal({ onClose }: Props) {
             </DialogHeader>
 
             <form onSubmit={submit} className="mt-2 flex flex-col gap-4">
+              {/* Your name (saved locally; never derived from email) */}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="prop-author">{t.reviewsNamePlaceholder}</Label>
+                <Input
+                  id="prop-author"
+                  value={authorName}
+                  onChange={(e) => setAuthorName(e.target.value)}
+                  placeholder={t.reviewsNamePlaceholder}
+                  maxLength={60}
+                />
+              </div>
+
               {/* Name */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">

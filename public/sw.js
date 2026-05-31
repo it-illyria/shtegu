@@ -125,8 +125,22 @@ self.addEventListener("message", (event) => {
         let totalBytes = 0;
         for (const url of urls) {
           // PMTiles archives are large; fetch the whole file once and store it.
-          const res = await fetch(url, { cache: "reload" });
+          // redirect: "error" makes the SW throw on any 3xx so an open-redirect
+          // on an allowlisted host cannot cause attacker-controlled bytes to be
+          // cached under a trusted key.
+          const res = await fetch(url, { cache: "reload", redirect: "error" });
           if (!res.ok) throw new Error(`Failed to fetch ${url} (${res.status})`);
+          // Defense in depth: verify the effective response host is still on
+          // the allowlist, in case `redirect: "error"` is ignored.
+          let effectiveHost;
+          try {
+            effectiveHost = new URL(res.url).host;
+          } catch {
+            throw new Error(`invalid response url for ${url}`);
+          }
+          if (!ALLOWED_CACHE_HOSTS.has(effectiveHost)) {
+            throw new Error(`response host not allowed: ${effectiveHost}`);
+          }
           const len = Number(res.headers.get("content-length") || 0);
           totalBytes += len;
           if (totalBytes > MAX_TOTAL_BYTES) {

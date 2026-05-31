@@ -200,6 +200,7 @@ const en: Dictionary = {
   authSending: "Sending…",
   authCheckInbox: "Check your inbox for a magic link.",
   authError: "Try again.",
+  authCooldown: "Please wait {seconds}s before resending",
 
   // Theme toggle
   themeSwitchLight: "Switch to light mode",

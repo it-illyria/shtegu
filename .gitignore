@@ -58,3 +58,11 @@ next-env.d.ts
 /CLAUDE.md
 .idea/
 .vercel
+
+# Local strategy/planning docs (not for git)
+/ALBANIA_TECH_MASTER.md
+/COMBINATIONS.md
+/ECOSYSTEMS.md
+/OPENSOURCE_MAP.md
+/RACI.md
+/WBS.md

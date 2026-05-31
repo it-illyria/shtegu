@@ -201,6 +201,8 @@ export interface Dictionary {
   authSending: string;
   authCheckInbox: string;
   authError: string;
+  /** Template: {seconds} */
+  authCooldown: string;
 
   // Theme toggle
   themeSwitchLight: string;
