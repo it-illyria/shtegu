@@ -36,7 +36,19 @@ export default function Reviews({ trailSlug }: { trailSlug: string }) {
   const [message, setMessage] = useState<string | null>(null);
 
   const signedIn = Boolean(user && !user.is_anonymous);
-  const identityName = signedIn && user?.email ? user.email.split("@")[0] : "";
+  const emailPrefix = signedIn && user?.email ? user.email.split("@")[0] : "";
+
+  // Seed the name field from a saved username (any device), or fall back to
+  // the email prefix for signed-in users. Users can edit it freely.
+  useEffect(() => {
+    if (name) return;
+    try {
+      const saved = localStorage.getItem("shtegu_username");
+      if (saved) { setName(saved); return; }
+    } catch {}
+    if (emailPrefix) setName(emailPrefix);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emailPrefix]);
 
   const load = useCallback(async () => {
     if (!supabase) return;
@@ -80,7 +92,8 @@ export default function Reviews({ trailSlug }: { trailSlug: string }) {
       }
       userId = data.user.id;
     }
-    const authorName = signedIn ? identityName || t.reviewsMember : name.trim() || t.reviewsAnonymous;
+    const authorName = name.trim() || (signedIn ? emailPrefix || t.reviewsMember : t.reviewsAnonymous);
+    try { localStorage.setItem("shtegu_username", authorName); } catch {}
     const { error } = await supabase.from("reviews").insert({
       trail_slug: trailSlug, author_id: userId, author_name: authorName, rating, body: body.trim(),
     });
@@ -107,12 +120,11 @@ export default function Reviews({ trailSlug }: { trailSlug: string }) {
       >
         <div className="flex flex-wrap items-center gap-3">
           <input
-            value={signedIn ? identityName : name}
+            value={name}
             onChange={(e) => setName(e.target.value)}
-            disabled={signedIn}
             placeholder={t.reviewsNamePlaceholder}
             maxLength={60}
-            className="flex-1 rounded-lg border px-3 py-1.5 text-sm disabled:opacity-60"
+            className="flex-1 rounded-lg border px-3 py-1.5 text-sm"
             style={inputStyle}
           />
           <label className="flex items-center gap-1 text-sm" style={{ color: "var(--text-primary)" }}>
