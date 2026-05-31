@@ -34,7 +34,7 @@ const REGION_COLOR: Record<string, string> = {
 /**
  * Map a trail's free-form region string (English or Albanian) onto one of the
  * four high-level zones used by the filter UI. Returns null when nothing
- * matches — those trails only show up under "All regions".
+ * matches — caller should fall back to {@link zoneForCoords}.
  */
 function zoneForRegion(region: string): RegionZone | null {
   const r = region.toLowerCase();
@@ -57,6 +57,29 @@ function zoneForRegion(region: string): RegionZone | null {
   return null;
 }
 
+/**
+ * Fallback classifier using the trailhead's geographic position. Splits
+ * Albania into four quadrants so every trail lands in exactly one zone:
+ *
+ *   lat ≥ 41.7  → Verior & Verilindor (Shkodër, Tropojë, Kukës, Has, Pukë)
+ *   41.0 ≤ lat < 41.7, lng < 19.9 → Perëndimor (Tirana, Durrës, Elbasan W)
+ *   41.0 ≤ lat < 41.7, lng ≥ 19.9 → Verior & Verilindor (Dibër, Bulqizë, Mat E)
+ *   lat < 41.0, lng < 20.0 → Jugor (Vlorë, Riviera, Sarandë)
+ *   lat < 41.0, lng ≥ 20.0 → Juglindor (Korçë, Pogradec, Përmet, Gjirokastër)
+ */
+function zoneForCoords([lng, lat]: [number, number]): RegionZone {
+  if (lat >= 41.7) return "Rajoni Verior & Verilindor";
+  if (lat >= 41.0) {
+    return lng < 19.9 ? "Rajoni Perëndimor" : "Rajoni Verior & Verilindor";
+  }
+  return lng < 20.0 ? "Rajoni Jugor" : "Rajoni Juglindor";
+}
+
+/** Final zone for a trail — try the region string first, fall back to coords. */
+function zoneFor(trail: Trail): RegionZone {
+  return zoneForRegion(trail.region) ?? zoneForCoords(trail.trailhead);
+}
+
 const PAGE_SIZE = 12;
 
 export default function TrailList({ trails, query = "" }: { trails: Trail[]; query?: string }) {
@@ -72,7 +95,7 @@ export default function TrailList({ trails, query = "" }: { trails: Trail[]; que
     const q = query.trim().toLowerCase();
     return trails.filter((trail) => {
       if (diff   !== "all" && trail.difficulty !== diff)   return false;
-      if (region !== "all" && zoneForRegion(trail.region) !== region) return false;
+      if (region !== "all" && zoneFor(trail) !== region) return false;
       if (!q) return true;
       const name_    = lang === "sq" && trail.sq?.name    ? trail.sq.name    : trail.name;
       const reg_     = lang === "sq" && trail.sq?.region  ? trail.sq.region  : trail.region;
