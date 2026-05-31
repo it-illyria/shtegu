@@ -88,11 +88,13 @@ export default function TrailList({ trails, query = "" }: { trails: Trail[]; que
   const [region, setRegion] = useState<string>("all");
   const [page,   setPage]   = useState(1);
   const [proposeOpen, setProposeOpen] = useState(false);
+  const [localQuery, setLocalQuery] = useState("");
 
   function resetPage() { setPage(1); }
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const combined = `${query} ${localQuery}`.trim();
+    const q = combined.toLowerCase();
     return trails.filter((trail) => {
       if (diff   !== "all" && trail.difficulty !== diff)   return false;
       if (region !== "all" && zoneFor(trail) !== region) return false;
@@ -106,7 +108,7 @@ export default function TrailList({ trails, query = "" }: { trails: Trail[]; que
         summary_.toLowerCase().includes(q)
       );
     });
-  }, [trails, query, diff, region, lang]);
+  }, [trails, query, localQuery, diff, region, lang]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage   = Math.min(page, totalPages);
@@ -220,6 +222,30 @@ export default function TrailList({ trails, query = "" }: { trails: Trail[]; que
               </Pill>
             ))}
           </div>
+        </div>
+
+        {/* Search bar */}
+        <div className="mb-3 relative">
+          <svg
+            width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden
+            className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: "var(--text-muted)" }}
+          >
+            <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+          <input
+            type="search"
+            value={localQuery}
+            onChange={(e) => { setLocalQuery(e.target.value); resetPage(); }}
+            placeholder={t.searchPlaceholder}
+            className="w-full rounded-xl border pl-9 pr-3 py-2 text-sm outline-none transition-colors"
+            style={{
+              background: "var(--input-bg)",
+              borderColor: "var(--input-border)",
+              color: "var(--input-text)",
+            }}
+          />
         </div>
 
         {/* Trail count */}
