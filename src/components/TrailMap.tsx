@@ -97,7 +97,7 @@ export default function TrailMap({ trail, userPosition, className }: Props) {
   const overlaysRef   = useRef<Set<OverlayId>>(new Set());
 
   const [defaultBasemap, setDefaultBasemap] = useState<BasemapChoice | null>(null);
-  const [activeBase,     setActiveBase]     = useState<BaseId>("topo");
+  const [activeBase,     setActiveBase]     = useState<BaseId>("default");
   const [activeOverlays, setActiveOverlays] = useState<Set<OverlayId>>(new Set());
   const [offline,        setOffline]        = useState<OfflineStatus>({ state: "idle" });
   const [poiCount,       setPoiCount]       = useState(0);
