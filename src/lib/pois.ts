@@ -85,22 +85,20 @@ export async function fetchTrailPois(
   }
 
   try {
-    const res = await fetch(OVERPASS_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        // Overpass etiquette: identify the client.
-        "User-Agent": "Shtegu/1.0 (hiking PWA; +https://github.com/shtegu)",
-      },
-      body: `data=${encodeURIComponent(query)}`,
-      signal: controller.signal,
-    });
-    if (!res.ok) return EMPTY;
+    // GET keeps the request a CORS-safe simple request — no preflight, no
+    // forbidden headers (browsers strip User-Agent overrides). POST worked in
+    // dev but produced silent failures in production behind a CDN.
+    const url = `${OVERPASS_URL}?data=${encodeURIComponent(query)}`;
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) {
+      console.warn("[POIs] Overpass HTTP", res.status, res.statusText);
+      return EMPTY;
+    }
 
     const data = (await res.json()) as OverpassResponse;
     return toFeatureCollection(data.elements ?? []);
-  } catch {
-    // Timeout, network error, abort, or bad JSON — degrade gracefully.
+  } catch (e) {
+    console.warn("[POIs] Overpass fetch failed", e);
     return EMPTY;
   } finally {
     clearTimeout(timer);
