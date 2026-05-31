@@ -8,6 +8,7 @@ import type { Trail } from "@/lib/types";
 import {
   resolveBasemap,
   OPENTOPO_STYLE,
+  OSM_STYLE,
   thunderforestOutdoorsStyle,
   type BasemapChoice,
   type BaseId,
@@ -280,6 +281,24 @@ export default function TrailMap({ trail, userPosition, className }: Props) {
     });
     mapRef.current = map;
     map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+    // Auto-fallback to plain OSM raster if the configured basemap fails on
+    // this device. Vector PMTiles can silently fail on some mobile WebGL
+    // implementations, leaving the canvas blank while overlays still render.
+    let fellBackToOsm = false;
+    map.on("error", (e) => {
+      console.warn("[TrailMap] map error", e?.error?.message ?? e);
+      const msg = (e?.error?.message ?? "").toLowerCase();
+      const tileOrStyleError =
+        msg.includes("tile") || msg.includes("style") ||
+        msg.includes("glyph") || msg.includes("sprite") ||
+        msg.includes("source") || msg.includes("pmtiles");
+      if (!fellBackToOsm && tileOrStyleError && activeBase === "default") {
+        fellBackToOsm = true;
+        console.warn("[TrailMap] falling back to OSM raster basemap");
+        try { map.setStyle(OSM_STYLE); } catch {}
+      }
+    });
 
     map.on("load", () => {
       addTrailOverlay(map);
