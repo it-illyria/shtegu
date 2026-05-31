@@ -6,7 +6,12 @@ import { useAuth } from "@/components/AuthProvider";
 import { useI18n } from "@/lib/i18n/context";
 
 const BUCKET = "trail-photos";
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+// Client-side cap. This is advisory only — an attacker can bypass it via
+// DevTools, so the *real* enforcement lives in the Supabase Storage bucket
+// settings ("Max file size: 5 MB", "Allowed MIME types: image/*") and in the
+// DB CHECK constraint that bounds storage_path extension (migration 0015).
+// 4 MB matches typical mobile-camera JPEGs and keeps uploads fast.
+const MAX_BYTES = 4 * 1024 * 1024; // 4 MB
 const MAX_DISPLAY = 8;
 
 interface PhotoRow {

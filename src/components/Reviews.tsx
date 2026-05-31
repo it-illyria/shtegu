@@ -36,19 +36,19 @@ export default function Reviews({ trailSlug }: { trailSlug: string }) {
   const [message, setMessage] = useState<string | null>(null);
 
   const signedIn = Boolean(user && !user.is_anonymous);
-  const emailPrefix = signedIn && user?.email ? user.email.split("@")[0] : "";
 
-  // Seed the name field from a saved username (any device), or fall back to
-  // the email prefix for signed-in users. Users can edit it freely.
+  // Seed the name field ONLY from a saved username (any device). We never
+  // fall back to the email prefix — that would leak PII into a public review.
+  // If the user doesn't pick a name, the post is attributed to
+  // t.reviewsAnonymous in submit().
   useEffect(() => {
     if (name) return;
     try {
       const saved = localStorage.getItem("shtegu_username");
-      if (saved) { setName(saved); return; }
+      if (saved) setName(saved);
     } catch {}
-    if (emailPrefix) setName(emailPrefix);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [emailPrefix]);
+  }, []);
 
   const load = useCallback(async () => {
     if (!supabase) return;
@@ -92,7 +92,7 @@ export default function Reviews({ trailSlug }: { trailSlug: string }) {
       }
       userId = data.user.id;
     }
-    const authorName = name.trim() || (signedIn ? emailPrefix || t.reviewsMember : t.reviewsAnonymous);
+    const authorName = name.trim() || t.reviewsAnonymous;
     try { localStorage.setItem("shtegu_username", authorName); } catch {}
     const { error } = await supabase.from("reviews").insert({
       trail_slug: trailSlug, author_id: userId, author_name: authorName, rating, body: body.trim(),

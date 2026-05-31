@@ -117,8 +117,16 @@ export async function parseFit(buffer: ArrayBuffer): Promise<[number, number][]>
 // Dispatcher
 // ---------------------------------------------------------------------------
 
-/** Parse any supported route file into [lng, lat][] coordinates. Returns null on failure. */
+/** Hard upper bound on route file size. 5 MB is plenty for any real GPX/FIT/KML
+ *  recording — anything larger is almost certainly hostile or malformed. */
+export const MAX_ROUTE_FILE_BYTES = 5 * 1024 * 1024;
+
+/** Parse any supported route file into [lng, lat][] coordinates. Returns null on failure.
+ *  Throws Error("file too large") if the file exceeds MAX_ROUTE_FILE_BYTES. */
 export async function parseRouteFile(file: File): Promise<[number, number][] | null> {
+  if (file.size > MAX_ROUTE_FILE_BYTES) {
+    throw new Error("file too large");
+  }
   const name = file.name.toLowerCase();
 
   if (name.endsWith(".gpx")) {

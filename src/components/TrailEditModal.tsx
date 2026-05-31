@@ -57,7 +57,14 @@ export default function TrailEditModal({ trail, onClose }: Props) {
     setFileError(false);
     setFileName(null);
     setRouteCoords(null);
-    const coords = await parseRouteFile(file);
+    let coords: [number, number][] | null = null;
+    try {
+      coords = await parseRouteFile(file);
+    } catch {
+      // Includes "file too large" (>5 MB). Surface via existing error state.
+      setFileError(true);
+      return;
+    }
     if (!coords || coords.length < 2) {
       setFileError(true);
     } else {

@@ -56,6 +56,10 @@ export default function NearMeClient({ trails }: { trails: Trail[] }) {
     setImportError(false);
 
     try {
+      // Hard size cap — a real GPX recording is well under 5 MB.
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("file too large");
+      }
       const text = await file.text();
       const data = parseGpx(text);
       if (!data) {

@@ -29,7 +29,13 @@ const extraConnect = basemapOrigins.join(" ");
 //   - MapLibre web workers + service worker → blob: / 'self'
 // 'unsafe-inline' is required for Next's bootstrap + MapLibre/Tailwind inline
 // styles (no nonce pipeline here). 'unsafe-eval' is added in dev only (HMR).
-const csp = [
+// Shared CSP directives. `blob:` in connect-src is required because MapLibre
+// and the PMTiles protocol shim fetch blob: URLs internally (decompressed
+// tile bytes are passed between the worker and main thread as blob URLs that
+// are then re-fetched). Mapillary host is kept — it's the source of the
+// optional "Street Photos" overlay (vector tiles fetched via connect-src,
+// gated by NEXT_PUBLIC_MAPILLARY_ACCESS_TOKEN at runtime).
+const cspBase = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com${isDev ? " 'unsafe-eval'" : ""}`,
   `style-src 'self' 'unsafe-inline'`,
@@ -44,10 +50,31 @@ const csp = [
   `frame-ancestors 'none'`,
   `object-src 'none'`,
   `upgrade-insecure-requests`,
+];
+
+// Enforced CSP: includes modern `report-to` for violation reporting.
+const csp = [...cspBase, `report-to csp-endpoint`].join("; ");
+
+// Report-Only CSP: same policy + legacy `report-uri` (still required by
+// Chrome/Firefox for CSP violation reports) + Trusted Types in report-only.
+// MapLibre uses setHTML internally for popups, so we observe — not enforce —
+// require-trusted-types-for to surface violations without breaking the map.
+const cspReportOnly = [
+  ...cspBase,
+  `report-uri /api/csp-report`,
+  `report-to csp-endpoint`,
+  `require-trusted-types-for 'script'`,
+  `trusted-types default 'allow-duplicates'`,
 ].join("; ");
 
 const securityHeaders = [
   { key: "Content-Security-Policy", value: csp },
+  { key: "Content-Security-Policy-Report-Only", value: cspReportOnly },
+  // Modern Reporting API endpoint group referenced by `report-to` above.
+  {
+    key: "Reporting-Endpoints",
+    value: `csp-endpoint="/api/csp-report"`,
+  },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -55,6 +82,14 @@ const securityHeaders = [
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
   },
+  // Cross-origin isolation. The app's sensitive flows (auth, activity log)
+  // are entirely same-origin, so COOP/CORP can be applied unconditionally.
+  // -- Cross-Origin-Embedder-Policy is intentionally OMITTED: requiring it
+  //    would force every cross-origin resource (OSM/Thunderforest/Mapillary
+  //    tiles, Protomaps glyphs) to opt in via CORP, which they do not, and
+  //    it also breaks the MapLibre WebGL canvas (cross-origin image data).
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  { key: "Cross-Origin-Resource-Policy", value: "same-site" },
   // We use the Geolocation API on-trail; everything else is denied.
   {
     key: "Permissions-Policy",
