@@ -308,6 +308,21 @@ export default function TrailMap({ trail, userPosition, className }: Props) {
       // container's final size isn't laid out yet. Force a resize once the
       // basemap is ready so the canvas matches the visible box.
       map.resize();
+
+      // Silent-failure guard: some mobile WebGL implementations leave the
+      // basemap blank without firing an error event. After a short grace
+      // period, if no basemap tiles have actually painted, swap to OSM
+      // raster — it's a guaranteed-working fallback.
+      setTimeout(() => {
+        if (fellBackToOsm || activeBase !== "default") return;
+        try {
+          if (!map.areTilesLoaded()) {
+            console.warn("[TrailMap] tiles never loaded — falling back to OSM raster");
+            fellBackToOsm = true;
+            map.setStyle(OSM_STYLE);
+          }
+        } catch {}
+      }, 3500);
     });
 
     map.on("styledata", () => { restoreCustomLayers(map); });
