@@ -159,11 +159,11 @@ begin
     where t.relname = 'saved_trails'
       and c.contype in ('p', 'u')
       and (
-        select array_agg(attname order by attname)
+        select array_agg(attname::text order by attname::text)
         from pg_attribute
         where attrelid = c.conrelid
           and attnum = any (c.conkey)
-      ) = array['trail_slug', 'user_id']
+      ) = array['trail_slug', 'user_id']::text[]
   ) then
     alter table public.saved_trails
       add constraint saved_trails_user_trail_uniq unique (user_id, trail_slug);

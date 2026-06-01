@@ -13,9 +13,10 @@ create table if not exists system_alerts (
   created_at  timestamptz not null default now()
 );
 
+-- Plain index — Postgres rejects now() in a partial index predicate (must be
+-- IMMUTABLE). Active-window filtering happens in the SELECT policy below.
 create index if not exists system_alerts_active_idx
-  on system_alerts (starts_at desc)
-  where ends_at is null or ends_at > now();
+  on system_alerts (starts_at desc);
 
 alter table system_alerts enable row level security;
 
