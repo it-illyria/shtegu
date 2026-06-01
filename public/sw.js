@@ -81,7 +81,8 @@ self.addEventListener("activate", (event) => {
 // to reply on. We cache each URL and report success/failure back.
 self.addEventListener("message", (event) => {
   const data = event.data;
-  if (!data || data.type !== "CACHE_OFFLINE_MAP") return;
+  if (!data) return;
+  if (data.type !== "CACHE_OFFLINE_MAP" && data.type !== "CLEAR_USER_CACHE") return;
 
   const reply = (payload) => {
     const port = event.ports && event.ports[0];
@@ -105,6 +106,26 @@ self.addEventListener("message", (event) => {
     }
   } catch {
     reply({ ok: false, error: "invalid source url" });
+    return;
+  }
+
+  // RT4-M10: drop navigation-cached HTML on signOut so the next user on this
+  // device doesn't see the previous user's authed pages from cache. Keep the
+  // app-shell + static asset entries (/_next/*) so the app still boots offline.
+  if (data.type === "CLEAR_USER_CACHE") {
+    event.waitUntil((async () => {
+      try {
+        const c = await caches.open(CACHE);
+        const keys = await c.keys();
+        await Promise.all(keys.map(async (req) => {
+          const u = new URL(req.url);
+          // Only same-origin navigations have HTML cache entries.
+          if (u.origin === self.location.origin && !u.pathname.startsWith("/_next/")) {
+            await c.delete(req);
+          }
+        }));
+      } catch {}
+    })());
     return;
   }
 

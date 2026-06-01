@@ -102,6 +102,18 @@ export function useBookmarks(): {
     void load();
   }, [authLoading, signedInUserId]);
 
+  // RT4-M9: cross-tab sync. When another tab writes to LS_KEY, re-read it so
+  // this tab's optimistic state matches. We don't fire DB ops here — the
+  // origin tab already did, or will, and we'd risk duplicate writes.
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key !== LS_KEY) return;
+      setBookmarks(readLS());
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   // ── Toggle ────────────────────────────────────────────────────────────────
 
   const toggle = useCallback(

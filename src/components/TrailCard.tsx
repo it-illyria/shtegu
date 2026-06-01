@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import type { Difficulty, Trail } from "@/lib/types";
 import { useI18n, interp } from "@/lib/i18n/context";
 import { useBookmarks } from "@/hooks/useBookmarks";
@@ -65,28 +66,49 @@ export default function TrailCard({ trail, distanceKm }: { trail: Trail; distanc
   const backIdx  = (h + 2) % RIDGES.length;
   const { score, count } = fakeRating(trail.slug);
 
+  const hasCover = Boolean(trail.coverImageUrl);
+
   return (
     <Link
       href={`/trails/${trail.slug}`}
       className="group relative flex flex-col overflow-hidden rounded-3xl transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl"
-      style={{ minHeight: "260px", background: HEADER_GRAD[trail.difficulty] }}
+      style={{ minHeight: "260px", background: hasCover ? "#1B2620" : HEADER_GRAD[trail.difficulty] }}
     >
-      {/* Mountain silhouettes */}
-      <svg
-        viewBox="0 0 280 100"
-        className="absolute bottom-0 left-0 w-full"
-        style={{ height: 100 }}
-        preserveAspectRatio="none"
-        aria-hidden
-      >
-        <path d={RIDGES[backIdx]}  fill="rgba(255,255,255,0.04)" />
-        <path d={RIDGES[frontIdx]} fill="rgba(0,0,0,0.22)" />
-      </svg>
+      {/* Cover image — shown when present, otherwise the gradient + mountain silhouettes */}
+      {hasCover && (
+        <Image
+          src={trail.coverImageUrl as string}
+          alt=""
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="absolute inset-0 object-cover transition-transform duration-300 group-hover:scale-105"
+          priority={false}
+        />
+      )}
 
-      {/* Bottom dark overlay */}
+      {/* Mountain silhouettes — only when no cover image */}
+      {!hasCover && (
+        <svg
+          viewBox="0 0 280 100"
+          className="absolute bottom-0 left-0 w-full"
+          style={{ height: 100 }}
+          preserveAspectRatio="none"
+          aria-hidden
+        >
+          <path d={RIDGES[backIdx]}  fill="rgba(255,255,255,0.04)" />
+          <path d={RIDGES[frontIdx]} fill="rgba(0,0,0,0.22)" />
+        </svg>
+      )}
+
+      {/* Bottom dark overlay — heavier when there's a photo so text stays legible */}
       <div
         className="absolute inset-x-0 bottom-0"
-        style={{ height: "75%", background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 50%, transparent 100%)" }}
+        style={{
+          height: hasCover ? "85%" : "75%",
+          background: hasCover
+            ? "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.15) 85%, transparent 100%)"
+            : "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 50%, transparent 100%)",
+        }}
       />
 
       {/* Bookmark button — top right */}

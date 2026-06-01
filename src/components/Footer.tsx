@@ -32,10 +32,28 @@ function MountainLogo() {
       <polyline points="36,54 48,18 62,54" fill="none" stroke="#152B1E" strokeWidth="1.5" strokeLinejoin="round" />
       <polyline points="24,46 30,34 36,40 42,26 48,14" fill="none" stroke="#E8801A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       <polygon points="48,14 44,20 52,20" fill="#E8801A" />
-      <circle cx="20" cy="38" r="2.5" fill="#4A7C54" />
-      <path d="M20 41 Q18 46 17 50 M20 41 Q22 46 22 50 M20 43 Q17 44 15 43 M20 43 Q23 43 24 42" stroke="#4A7C54" strokeWidth="1.8" strokeLinecap="round" fill="none" />
-      <circle cx="27" cy="40" r="2.5" fill="#3F6B46" />
-      <path d="M27 43 Q25 48 24 52 M27 43 Q29 48 29 52 M27 45 Q24 46 22 45 M27 45 Q30 44 31 43" stroke="#3F6B46" strokeWidth="1.8" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+}
+
+/** Wave-shaped mountain silhouette divider for the top of the footer. */
+function MountainWave({ fill, accent }: { fill: string; accent: string }) {
+  return (
+    <svg
+      viewBox="0 0 1440 80"
+      className="block h-10 w-full"
+      preserveAspectRatio="none"
+      aria-hidden
+    >
+      <path
+        d="M0,80 L0,40 L120,20 L220,55 L340,15 L480,50 L600,10 L740,45 L880,18 L1020,52 L1160,22 L1290,48 L1440,18 L1440,80 Z"
+        fill={fill}
+      />
+      <path
+        d="M0,80 L0,55 L160,40 L300,65 L440,38 L580,60 L720,32 L860,58 L1000,40 L1140,62 L1280,42 L1440,55 L1440,80 Z"
+        fill={accent}
+        opacity="0.55"
+      />
     </svg>
   );
 }
@@ -46,73 +64,115 @@ export default function Footer() {
   const isDark = resolved === "dark";
 
   // ── Theme tokens ──────────────────────────────────────────────────────────
-  const bg          = isDark ? "#111714"          : "#F1F4EF";
-  const borderTop   = isDark ? "none"             : "1px solid #E2E6E0";
-  const wordmark    = isDark ? "#ffffff"           : "#243028";
-  const tagline     = isDark ? "rgba(255,255,255,0.38)" : "#8A9690";
-  const colHead     = isDark ? "rgba(255,255,255,0.30)" : "#5E6A61";
-  const linkColor   = isDark ? "rgba(255,255,255,0.50)" : "#5E6A61";
-  const linkHover   = isDark ? "#ffffff"           : "#2F4F3A";
-  const divider     = isDark ? "rgba(255,255,255,0.08)" : "#E2E6E0";
-  const bottomText  = isDark ? "rgba(255,255,255,0.22)" : "#9AA4A0";
-  const disclaimer  = isDark ? "rgba(255,255,255,0.28)" : "#8A9690";
+  const bg          = isDark ? "#111714" : "#F1F4EF";
+  const waveFill    = isDark ? "#0C1310" : "#E3EBE0";
+  const waveAccent  = isDark ? "#1E2A24" : "#CFDBC9";
+  const wordmark    = isDark ? "#ffffff" : "#243028";
+  const tagline     = isDark ? "rgba(255,255,255,0.55)" : "#5E6A61";
+  const colHead     = isDark ? "rgba(255,255,255,0.42)" : "#3E5048";
+  const linkColor   = isDark ? "rgba(255,255,255,0.65)" : "#3E5048";
+  const linkHover   = isDark ? "#E8B566" : "#2F4F3A";
+  const divider     = isDark ? "rgba(255,255,255,0.08)" : "#D6DDD2";
+  const bottomText  = isDark ? "rgba(255,255,255,0.35)" : "#7A857F";
+  const emergencyBg = isDark ? "rgba(232,80,80,0.10)"  : "#FBE6E2";
+  const emergencyBorder = isDark ? "rgba(232,80,80,0.30)" : "#E8B0A6";
+  const emergencyText = isDark ? "#F4B5AD" : "#5A1818";
+  const emergencyAccent = "#C0392B";
 
   return (
-    <footer style={{ background: bg, borderTop }}>
-      <div className="mx-auto w-full px-8 py-10 lg:px-12" style={{ maxWidth: 1440 }}>
+    <footer style={{ background: bg }}>
+      {/* Decorative mountain wave */}
+      <MountainWave fill={waveFill} accent={waveAccent} />
 
-        {/* 3-column grid */}
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
+      <div className="mx-auto w-full px-6 pt-8 pb-10 sm:px-8 lg:px-12" style={{ maxWidth: 1440 }}>
 
-          {/* Left — logo + tagline */}
-          <div className="flex flex-col gap-3">
+        {/* Emergency callout */}
+        <div
+          className="mb-10 flex flex-col items-start gap-3 rounded-2xl border px-5 py-4 sm:flex-row sm:items-center sm:gap-5"
+          style={{ background: emergencyBg, borderColor: emergencyBorder, color: emergencyText }}
+        >
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-base font-bold text-white"
+            style={{ background: emergencyAccent }}
+            aria-hidden
+          >
+            112
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] opacity-70">
+              {t.footerEmergencyTag}
+            </p>
+            <p className="text-base font-semibold leading-tight">{t.footerEmergencyTitle}</p>
+            <p className="text-xs leading-snug opacity-80">{t.footerEmergencyHint}</p>
+          </div>
+        </div>
+
+        {/* 4-column grid */}
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 sm:gap-10">
+
+          {/* Brand */}
+          <div className="col-span-2 flex flex-col gap-3 sm:col-span-1">
             <div className="flex items-center gap-2.5">
               <MountainLogo />
               <span className="font-display text-[17px] font-bold tracking-[-0.02em]" style={{ color: wordmark }}>
                 Shtegu
               </span>
             </div>
-            <p className="text-sm leading-relaxed" style={{ color: tagline, maxWidth: 200 }}>
+            <p className="text-sm leading-relaxed" style={{ color: tagline, maxWidth: 240 }}>
               {t.appTagline}
             </p>
-          </div>
-
-          {/* Center — discover links */}
-          <div className="flex gap-12">
-            <div className="flex flex-col gap-2.5">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: colHead }}>
-                Discover
-              </p>
-              <FooterLink href="/"        linkColor={linkColor} hoverColor={linkHover}>Explore</FooterLink>
-              <FooterLink href="/near-me" linkColor={linkColor} hoverColor={linkHover}>Near Me</FooterLink>
-              <FooterLink href="/saved"   linkColor={linkColor} hoverColor={linkHover}>Saved</FooterLink>
-              <FooterLink href="/activity" linkColor={linkColor} hoverColor={linkHover}>Activity</FooterLink>
-            </div>
-            <div className="flex flex-col gap-2.5">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: colHead }}>
-                Community
-              </p>
-              <FooterLink href="/feedback" linkColor={linkColor} hoverColor={linkHover}>Feedback</FooterLink>
-              <FooterLink href="/safety"   linkColor={linkColor} hoverColor={linkHover}>{t.footerSafetyLink}</FooterLink>
-            </div>
-          </div>
-
-          {/* Right — disclaimer */}
-          <div className="flex flex-col gap-3 sm:items-end sm:text-right">
-            <p className="text-xs leading-relaxed" style={{ color: disclaimer, maxWidth: 240 }}>
-              {t.footerDisclaimer}
+            <p className="text-xs leading-relaxed" style={{ color: bottomText, maxWidth: 240 }}>
+              {t.footerMadeWith}
             </p>
-            <p className="text-xs" style={{ color: tagline }}>{t.footerMadeWith}</p>
+          </div>
+
+          {/* Discover */}
+          <div className="flex flex-col gap-2.5">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: colHead }}>
+              {t.footerDiscoverHead}
+            </p>
+            <FooterLink href="/"         linkColor={linkColor} hoverColor={linkHover}>{t.navExplore}</FooterLink>
+            <FooterLink href="/near-me"  linkColor={linkColor} hoverColor={linkHover}>{t.navNearMe}</FooterLink>
+            <FooterLink href="/compare"  linkColor={linkColor} hoverColor={linkHover}>{t.navCompare}</FooterLink>
+            <FooterLink href="/gear"     linkColor={linkColor} hoverColor={linkHover}>{t.navGear}</FooterLink>
+            <FooterLink href="/saved"    linkColor={linkColor} hoverColor={linkHover}>{t.navSaved}</FooterLink>
+            <FooterLink href="/activity" linkColor={linkColor} hoverColor={linkHover}>{t.navActivity}</FooterLink>
+          </div>
+
+          {/* Community */}
+          <div className="flex flex-col gap-2.5">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: colHead }}>
+              {t.footerCommunityHead}
+            </p>
+            <FooterLink href="/feedback" linkColor={linkColor} hoverColor={linkHover}>{t.feedbackLink}</FooterLink>
+            <FooterLink href="/safety"   linkColor={linkColor} hoverColor={linkHover}>{t.footerSafetyLink}</FooterLink>
+          </div>
+
+          {/* About */}
+          <div className="flex flex-col gap-2.5">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: colHead }}>
+              {t.footerAboutHead}
+            </p>
+            <FooterLink href="/safety#mission" linkColor={linkColor} hoverColor={linkHover}>{t.footerAboutMission}</FooterLink>
+            <FooterLink href="/safety#data"    linkColor={linkColor} hoverColor={linkHover}>{t.footerAboutSources}</FooterLink>
           </div>
         </div>
 
+        {/* Disclaimer */}
+        <p
+          className="mt-10 text-xs leading-relaxed"
+          style={{ color: tagline, maxWidth: 720 }}
+        >
+          {t.footerDisclaimer}
+        </p>
+
         {/* Bottom bar */}
         <div
-          className="mt-8 flex flex-wrap items-center justify-between gap-2 pt-5 text-[11px]"
+          className="mt-6 flex flex-col gap-2 pt-5 text-[11px] sm:flex-row sm:items-center sm:justify-between"
           style={{ borderTop: `1px solid ${divider}`, color: bottomText }}
         >
-          <span>© {new Date().getFullYear()} Shtegu</span>
-          <span style={{ color: disclaimer }}>{t.homeCountryLabel}</span>
+          <span>© {new Date().getFullYear()} Shtegu · {t.homeCountryLabel}</span>
+          <span className="opacity-80">{t.footerOpenSource}</span>
         </div>
       </div>
     </footer>

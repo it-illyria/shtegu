@@ -18,6 +18,11 @@ const basemapOrigins = [
 ].filter((o): o is string => Boolean(o));
 const extraConnect = basemapOrigins.join(" ");
 
+// Supabase project origin (e.g. https://xxx.supabase.co). Photos uploaded to
+// the public `trail-photos` bucket are served from this origin, so it must be
+// allowed in img-src. Computed at build time from NEXT_PUBLIC_SUPABASE_URL.
+const supabaseOrigin = originOf(process.env.NEXT_PUBLIC_SUPABASE_URL) || "";
+
 // Content Security Policy. Sources are scoped to exactly what the app talks to:
 //   - Supabase (REST/auth/realtime)        → *.supabase.co + wss
 //   - Open-Meteo (weather + elevation)     → api.open-meteo.com
@@ -39,7 +44,7 @@ const cspBase = [
   `default-src 'self'`,
   `script-src 'self' 'unsafe-inline' https://va.vercel-scripts.com${isDev ? " 'unsafe-eval'" : ""}`,
   `style-src 'self' 'unsafe-inline'`,
-  `img-src 'self' data: blob: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://protomaps.github.io https://*.opentopomap.org https://*.thunderforest.com https://tile.waymarkedtrails.org`,
+  `img-src 'self' data: blob:${supabaseOrigin ? " " + supabaseOrigin : ""} https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://protomaps.github.io https://*.opentopomap.org https://*.thunderforest.com https://tile.waymarkedtrails.org`,
   `connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co https://overpass-api.de https://protomaps.github.io https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://formspree.io https://*.opentopomap.org https://*.thunderforest.com https://tile.waymarkedtrails.org https://tiles.mapillary.com https://va.vercel-scripts.com https://vitals.vercel-insights.com${extraConnect ? " " + extraConnect : ""}`,
   `worker-src 'self' blob:`,
   `child-src 'self' blob:`,
@@ -113,7 +118,17 @@ const securityHeaders = [
   },
 ];
 
+const supabaseHostname = (() => {
+  try { return supabaseOrigin ? new URL(supabaseOrigin).hostname : ""; }
+  catch { return ""; }
+})();
+
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: supabaseHostname
+      ? [{ protocol: "https", hostname: supabaseHostname, pathname: "/storage/v1/object/public/**" }]
+      : [],
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

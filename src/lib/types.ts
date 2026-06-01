@@ -22,6 +22,10 @@ export interface Trail {
   logistics: string[];
   /** Data provenance, e.g. "OpenStreetMap (ODbL)". Absent for seed data. */
   source?: string;
+  /** Public URL of the cover image. Resolved via the trail_covers view (explicit
+   * cover_image_url, falling back to the newest community photo). Absent → use
+   * the difficulty gradient. */
+  coverImageUrl?: string;
   /** Albanian overrides for localizable text fields. Falls back to English when absent. */
   sq?: {
     name?: string;

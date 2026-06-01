@@ -108,6 +108,17 @@ export default function AlertBanner() {
     return () => ctrl.abort();
   }, []);
 
+  // RT4-M9: cross-tab sync. If the user dismisses an alert in another tab,
+  // mirror that here so the banner doesn't reappear on this tab.
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key !== LS_KEY) return;
+      setDismissed(readDismissed());
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   function dismiss(id: string) {
     const next = new Set(dismissed);
     next.add(id);

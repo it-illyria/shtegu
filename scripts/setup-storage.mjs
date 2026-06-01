@@ -31,10 +31,13 @@ if (existing) {
   process.exit(0);
 }
 
+// SVG and HEIC excluded — SVG carries XSS (script execution at *.supabase.co
+// origin), HEIC has had image-parser CVEs (CVE-2023-4863 family). iOS Safari
+// transcodes HEIC → JPEG on upload by default, so excluding it doesn't hurt UX.
 const { error } = await supabase.storage.createBucket(BUCKET, {
   public: true,             // allow public GET (anyone can view photos)
   fileSizeLimit: 5_242_880, // 5 MB per file
-  allowedMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/heic"],
+  allowedMimeTypes: ["image/jpeg", "image/png", "image/webp"],
 });
 
 if (error) {

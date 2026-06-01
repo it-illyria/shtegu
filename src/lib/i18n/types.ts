@@ -131,6 +131,16 @@ export interface Dictionary {
   trailhead: string;
   trailStartLabel: string;
   trailEndLabel: string;
+  footerDiscoverHead: string;
+  footerCommunityHead: string;
+  footerAboutHead: string;
+  footerAboutMission: string;
+  footerAboutSources: string;
+  footerEmergencyTag: string;
+  footerEmergencyTitle: string;
+  footerEmergencyHint: string;
+  footerOpenSource: string;
+  planYourAdventure: string;
   destination: string;
   downloadOfflineMap: string;
   downloading: string;

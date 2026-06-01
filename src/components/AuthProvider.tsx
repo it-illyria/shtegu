@@ -66,6 +66,36 @@ export default function AuthProvider({
     };
   }, []);
 
+  // RT4-M9: cross-tab auth sync. Supabase persists the session in localStorage
+  // under sb-<projectRef>-auth-token; a sign-in/out in another tab fires a
+  // `storage` event that this tab otherwise misses until the next reload.
+  useEffect(() => {
+    if (!supabase) return;
+    const ref = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https?:\/\/([^.]+)/)?.[1];
+    const tokenKey = ref ? `sb-${ref}-auth-token` : null;
+    if (!tokenKey) return;
+    function onStorage(e: StorageEvent) {
+      if (e.key !== tokenKey) return;
+      void supabase!.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  // RT4-LOW: refresh auth state on BFCache restore. Safari/Firefox restore the
+  // page without re-running effects; if the user signed out in another tab
+  // while this one was in BFCache, we'd render stale authed UI until interaction.
+  useEffect(() => {
+    if (!supabase) return;
+    function onPageShow(e: PageTransitionEvent) {
+      if (e.persisted) {
+        void supabase!.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
+      }
+    }
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
+
   const signInWithEmail = useCallback(
     async (email: string): Promise<SignInResult> => {
       if (!supabase) {
@@ -86,11 +116,24 @@ export default function AuthProvider({
     if (!supabase) return;
     await supabase.auth.signOut();
     // Clear shared local state so the next user on the same device doesn't inherit it.
-    // Keep shtegu_gear_checked, shtegu_alerts_dismissed, shtegu_otp_last:* alone —
+    // Keep shtegu_gear_checked, shtegu_alerts_dismissed alone —
     // those are device-scoped UX, not identity data.
     try {
       localStorage.removeItem("shtegu_bookmarks");
       localStorage.removeItem("shtegu_username");
+    } catch {}
+    // RT4-M1: sweep per-email OTP rate-limit timestamps. They key off the
+    // email address, which is identity data — leaving them lets the next user
+    // on the device leak who previously requested an OTP here.
+    try {
+      for (const k of Object.keys(localStorage)) {
+        if (k.startsWith("shtegu_otp_last:")) localStorage.removeItem(k);
+      }
+    } catch {}
+    // RT4-M10: ask the SW to drop navigation-cached HTML so the next user
+    // doesn't see the previous user's authed pages from cache.
+    try {
+      navigator.serviceWorker?.controller?.postMessage({ type: "CLEAR_USER_CACHE" });
     } catch {}
   }, []);
 

@@ -1,5 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#16a34a"/>
-  <path d="M96 384 L208 176 L288 312 L336 232 L416 384 Z" fill="#ffffff"/>
-  <circle cx="372" cy="148" r="34" fill="#fde047"/>
+  <rect width="512" height="512" rx="96" fill="#F1F4EF"/>
+  <!-- Main mountain — dark green fill + outline -->
+  <polygon points="256,32 48,432 464,432" fill="#2D5438"/>
+  <polyline points="48,432 256,32 464,432" fill="none" stroke="#1B3626" stroke-width="16" stroke-linejoin="round"/>
+  <!-- Secondary peak (right) — darker slate-green -->
+  <polygon points="384,144 288,432 496,432" fill="#1E3D2A"/>
+  <polyline points="288,432 384,144 496,432" fill="none" stroke="#152B1E" stroke-width="12" stroke-linejoin="round"/>
+  <!-- Orange arrow going up through the mountain -->
+  <polyline points="192,368 240,272 288,320 336,208 384,112" fill="none" stroke="#E8801A" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  <polygon points="384,112 352,160 416,160" fill="#E8801A"/>
 </svg>

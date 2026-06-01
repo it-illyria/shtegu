@@ -51,6 +51,11 @@ export async function parseKmz(buffer: ArrayBuffer): Promise<[number, number][]>
   const { unzipSync } = await import("fflate");
   // Reject any single entry whose inflated size exceeds 20 MB — a small KMZ
   // claiming a multi-GB inflated payload is a decompression bomb.
+  // The `filter` checks CDH-reported size which an attacker can lie about.
+  // The post-unzip `length` sum is the authoritative cap — fflate decodes
+  // the local file header bytes, so .length is the actually-decompressed
+  // size. Keep both: CDH filter blocks obvious bombs cheaply; sum check
+  // catches LFH-lying attacks.
   const files = unzipSync(new Uint8Array(buffer), {
     filter: (file) => file.originalSize > 0 && file.originalSize < 20 * 1024 * 1024,
   });

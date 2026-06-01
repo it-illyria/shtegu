@@ -187,7 +187,7 @@ function RightPanel({ onPropose, trailhead, featuredSlug }: { onPropose: () => v
   const [daily, setDaily] = useState<WeatherDay[]>([]);
   const [wxStatus, setWxStatus] = useState<"loading" | "ready" | "error">("loading");
   const [retryKey, setRetryKey] = useState(0);
-  const { lang } = useI18n();
+  const { lang, t } = useI18n();
 
   useEffect(() => {
     const coords = trailhead ?? [20.07, 41.33]; // Albania centre fallback
@@ -214,7 +214,7 @@ function RightPanel({ onPropose, trailhead, featuredSlug }: { onPropose: () => v
         className="rounded-2xl border p-5"
         style={{ background: "var(--card-bg)", borderColor: "var(--card-border)", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}
       >
-        <h3 className="mb-3 text-[15px] font-semibold" style={{ color: "var(--text-primary)" }}>Plan Your Adventure</h3>
+        <h3 className="mb-3 text-[15px] font-semibold" style={{ color: "var(--text-primary)" }}>{t.planYourAdventure}</h3>
         <ul className="flex flex-col divide-y" style={{ borderColor: "var(--card-border)" }}>
           {planItems.map((item) => (
             <li key={item.label}>

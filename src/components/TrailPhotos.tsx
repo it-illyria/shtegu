@@ -32,6 +32,31 @@ function photoUrl(path: string): string {
 // a safe ASCII filename charset. Forces a known image extension if missing.
 // Prevents bidi/RTL spoofing, NUL truncation, and traversal via "../" in the
 // filename portion of trail_photos.storage_path.
+// Strip EXIF (including GPS) metadata by re-encoding through a canvas before
+// upload. The bitmap pipeline drops all non-pixel metadata. If decoding fails
+// (e.g. unsupported format on older browsers), fall through to the original
+// file — the bucket MIME allowlist still constrains what can land.
+async function stripExif(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const canvas = document.createElement("canvas");
+    canvas.width = bmp.width;
+    canvas.height = bmp.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bmp, 0, 0);
+    bmp.close();
+    const blob: Blob | null = await new Promise((res) =>
+      canvas.toBlob((b) => res(b), file.type, 0.92),
+    );
+    if (!blob) return file;
+    return new File([blob], file.name, { type: file.type, lastModified: Date.now() });
+  } catch {
+    return file;
+  }
+}
+
 function sanitizeFilename(name: string): string {
   const ext = (name.match(/\.(jpe?g|png|webp)$/i)?.[0] || ".jpg").toLowerCase();
   const base = name
@@ -83,20 +108,25 @@ export default function TrailPhotos({ trailSlug }: { trailSlug: string }) {
   if (!isSupabaseConfigured || !supabase) return null;
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+    const rawFile = e.target.files?.[0];
     if (!fileInputRef.current) return;
     // Reset so the same file can be re-selected after an error
     fileInputRef.current.value = "";
-    if (!file || !supabase) return;
+    if (!rawFile || !supabase) return;
 
     setError(null);
 
-    if (file.size > MAX_BYTES) {
+    if (rawFile.size > MAX_BYTES) {
       setError(t.photosErrorSize);
       return;
     }
 
     setUploading(true);
+
+    // Strip EXIF (GPS, camera serial, timestamps) before anything touches the
+    // network. Done first so the sanitized name + size both reflect the
+    // re-encoded file.
+    const file = await stripExif(rawFile);
 
     // Ensure we have a session (anonymous if needed)
     let userId = user?.id;
@@ -115,7 +145,10 @@ export default function TrailPhotos({ trailSlug }: { trailSlug: string }) {
     }
 
     const cleanName = sanitizeFilename(file.name);
-    const storagePath = `${trailSlug}/${Date.now()}-${cleanName}`;
+    // Random suffix (not Date.now()) so storage paths aren't enumerable by
+    // guessing timestamps. 12 hex chars from a UUID = ~48 bits of entropy.
+    const randomId = (globalThis.crypto as Crypto).randomUUID().slice(0, 12);
+    const storagePath = `${trailSlug}/${randomId}-${cleanName}`;
     const { error: storageError } = await supabase.storage
       .from(BUCKET)
       .upload(storagePath, file, { upsert: false });
