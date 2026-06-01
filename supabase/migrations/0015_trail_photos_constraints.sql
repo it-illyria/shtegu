@@ -17,10 +17,13 @@
 --   1. storage_path must end with a known image extension (jpg/jpeg/png/webp).
 --   2. At most 50 photos per trail_slug (BEFORE INSERT trigger).
 
--- 1) Filename extension whitelist (case-insensitive)
-alter table trail_photos
-  add constraint trail_photos_storage_path_ext_chk
-  check (storage_path ~* '\.(jpe?g|png|webp)$');
+-- 1) Filename extension whitelist (case-insensitive). Wrapped in DO so a
+-- re-run after partial application doesn't error on duplicate_object.
+do $$ begin
+  alter table trail_photos
+    add constraint trail_photos_storage_path_ext_chk
+    check (storage_path ~* '\.(jpe?g|png|webp)$');
+exception when duplicate_object then null; end $$;
 
 -- 2) Per-trail row cap (50 photos / trail). Enforced as a trigger because a
 -- CHECK constraint cannot reference other rows.
