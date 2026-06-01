@@ -90,10 +90,26 @@ const securityHeaders = [
   //    it also breaks the MapLibre WebGL canvas (cross-origin image data).
   { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
   { key: "Cross-Origin-Resource-Policy", value: "same-site" },
-  // We use the Geolocation API on-trail; everything else is denied.
+  // We use the Geolocation API on-trail; every other powerful feature is
+  // denied so a compromised dependency can't silently request them.
   {
     key: "Permissions-Policy",
-    value: "geolocation=(self), camera=(), microphone=(), interest-cohort=()",
+    value: [
+      "geolocation=(self)",
+      "camera=()",
+      "microphone=()",
+      "payment=()",
+      "usb=()",
+      "bluetooth=()",
+      "serial=()",
+      "hid=()",
+      "accelerometer=()",
+      "gyroscope=()",
+      "magnetometer=()",
+      "display-capture=()",
+      "screen-wake-lock=()",
+      "interest-cohort=()",
+    ].join(", "),
   },
 ];
 

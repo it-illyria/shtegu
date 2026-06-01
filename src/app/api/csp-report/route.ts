@@ -17,7 +17,7 @@ function sanitizeUrl(u: unknown): string {
     const p = new URL(u);
     return (p.origin + p.pathname).slice(0, 200);
   } catch {
-    return u.slice(0, 60);
+    return u.replace(/[\x00-\x1f\x7f-\x9f]/g, "").slice(0, 60);
   }
 }
 
@@ -67,6 +67,8 @@ function sanitizeBody(body: unknown): unknown {
 }
 
 export async function POST(request: NextRequest) {
+  const len = Number(request.headers.get("content-length") ?? 0);
+  if (len > 32_768) return new Response(null, { status: 413 });
   try {
     const body = await request.json();
     console.warn("[CSP-Report]", sanitizeBody(body));
@@ -74,5 +76,5 @@ export async function POST(request: NextRequest) {
     // Some browsers send empty bodies on certain violations; ignore.
     console.warn("[CSP-Report]", "(unparseable body)");
   }
-  return new Response(null, { status: 204 });
+  return new Response(null, { status: 204, headers: { "Cache-Control": "no-store" } });
 }

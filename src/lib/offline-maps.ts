@@ -56,7 +56,10 @@ interface DownloadArgs {
 
 const SW_TIMEOUT_MS = 60_000;
 /** Same cache name the service worker opens; we write tiles into it directly. */
-const CACHE_NAME = "shtegu-v1";
+// KEEP IN SYNC with `CACHE` in public/sw.js — bumping one without the other
+// causes the page-written tiles and the SW-served fetches to diverge into
+// separate Cache Storage buckets, silently breaking offline reads.
+const CACHE_NAME = "shtegu-v2";
 
 /**
  * Trigger an offline download and report progress through the supplied setter.

@@ -40,7 +40,9 @@ export function ThemeProvider({
     } else {
       html.setAttribute("data-theme", t);
     }
-    document.cookie = `${COOKIE}=${t};path=/;max-age=31536000;SameSite=Lax`;
+    // Add Secure on HTTPS so the cookie is never sent over plaintext.
+    const secure = typeof location !== "undefined" && location.protocol === "https:" ? ";Secure" : "";
+    document.cookie = `${COOKIE}=${t};path=/;max-age=31536000;SameSite=Lax${secure}`;
   }, []);
 
   // Sync resolved value whenever theme or system preference changes.

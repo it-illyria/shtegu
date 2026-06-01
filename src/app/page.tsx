@@ -1,18 +1,11 @@
 import { getTrails } from "@/lib/trails-repo";
 import HomeClient from "./HomeClient";
 
-// Cache SSR responses for 5 minutes; searchParams are still handled per-request.
+// Cache SSR responses for 5 minutes. `?q=` is handled client-side so the
+// data cache key for `/` stays query-agnostic.
 export const revalidate = 300;
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const [trails, { q }] = await Promise.all([
-    getTrails(),
-    searchParams.then((p) => ({ q: typeof p.q === "string" ? p.q : "" })),
-  ]);
-
-  return <HomeClient trails={trails} initialQuery={q} />;
+export default async function Home() {
+  const trails = await getTrails();
+  return <HomeClient trails={trails} />;
 }

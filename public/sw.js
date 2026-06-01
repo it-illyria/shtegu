@@ -28,8 +28,22 @@
 // unvalidated CACHE_OFFLINE_MAP handler. On activate, all non-matching caches
 // are deleted, forcing clients to re-fetch from trusted origins.
 const CACHE = "shtegu-v2";
+// Tiles live in their own namespace so we can evict them under LRU pressure
+// without disturbing app-shell entries. Kept on the activate keep-list.
+const TILE_CACHE = "shtegu-tiles-v2";
 const PMTILES_TILE_PREFIX = "/__pmtiles_tile";
 const APP_SHELL = ["/", "/icon.svg", "/manifest.webmanifest"];
+
+// Soft LRU bound on the tile cache. Cache API iteration order is insertion
+// order, so slicing from the front gives us FIFO eviction.
+const MAX_TILE_ENTRIES = 800;
+const PRUNE_BATCH = 100;
+async function pruneTileCache(cache) {
+  const keys = await cache.keys();
+  if (keys.length <= MAX_TILE_ENTRIES) return;
+  const drop = keys.slice(0, PRUNE_BATCH);
+  await Promise.all(drop.map((k) => cache.delete(k)));
+}
 
 // Allowlist of hosts that CACHE_OFFLINE_MAP messages are permitted to cache.
 // If your deployment serves PMTiles from a different host (see PMTILES_URL env
@@ -56,7 +70,7 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))),
+        Promise.all(keys.filter((k) => k !== CACHE && k !== TILE_CACHE).map((k) => caches.delete(k))),
       ),
   );
   self.clients.claim();
@@ -233,12 +247,38 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (isTile || url.pathname.startsWith("/_next/") || APP_SHELL.includes(url.pathname)) {
+  if (isTile) {
+    event.respondWith(
+      caches.open(TILE_CACHE).then((cache) =>
+        cache.match(request).then((cached) => {
+          const network = fetch(request)
+            .then((res) => {
+              // Only cache OK image responses from a trusted (basic/cors)
+              // origin. Skips error pages, opaque redirects, and any
+              // non-image surprise (HTML captive portal, etc.).
+              const ct = res.headers.get("content-type") || "";
+              const trusted = res.type === "basic" || res.type === "cors";
+              if (res.ok && trusted && ct.startsWith("image/")) {
+                cache.put(request, res.clone()).then(() => pruneTileCache(cache));
+              }
+              return res;
+            })
+            .catch(() => cached);
+          return cached ?? network;
+        }),
+      ),
+    );
+    return;
+  }
+
+  if (url.pathname.startsWith("/_next/") || APP_SHELL.includes(url.pathname)) {
     event.respondWith(
       caches.match(request).then((cached) => {
         const network = fetch(request)
           .then((res) => {
-            caches.open(CACHE).then((c) => c.put(request, res.clone()));
+            if (res.ok && (res.type === "basic" || res.type === "cors")) {
+              caches.open(CACHE).then((c) => c.put(request, res.clone()));
+            }
             return res;
           })
           .catch(() => cached);

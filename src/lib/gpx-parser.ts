@@ -49,7 +49,18 @@ export function parseKml(text: string): [number, number][] {
 // ---------------------------------------------------------------------------
 export async function parseKmz(buffer: ArrayBuffer): Promise<[number, number][]> {
   const { unzipSync } = await import("fflate");
-  const files = unzipSync(new Uint8Array(buffer));
+  // Reject any single entry whose inflated size exceeds 20 MB — a small KMZ
+  // claiming a multi-GB inflated payload is a decompression bomb.
+  const files = unzipSync(new Uint8Array(buffer), {
+    filter: (file) => file.originalSize > 0 && file.originalSize < 20 * 1024 * 1024,
+  });
+  // Defense in depth: even if every entry is under the per-file cap, the sum
+  // of many small entries could still blow memory. Cap aggregate at 30 MB.
+  let total = 0;
+  for (const k of Object.keys(files)) {
+    total += files[k].length;
+    if (total > 30 * 1024 * 1024) throw new Error("KMZ too large");
+  }
   const kmlKey = Object.keys(files).find((k) => k.toLowerCase().endsWith(".kml"));
   if (!kmlKey) return [];
   const kmlText = new TextDecoder().decode(files[kmlKey]);

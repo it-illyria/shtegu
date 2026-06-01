@@ -27,6 +27,26 @@ function photoUrl(path: string): string {
   return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 }
 
+// Sanitize uploaded filename before composing the storage path. Strips path
+// separators, C0/C1 controls, bidi/zero-width codepoints, and anything outside
+// a safe ASCII filename charset. Forces a known image extension if missing.
+// Prevents bidi/RTL spoofing, NUL truncation, and traversal via "../" in the
+// filename portion of trail_photos.storage_path.
+function sanitizeFilename(name: string): string {
+  const ext = (name.match(/\.(jpe?g|png|webp)$/i)?.[0] || ".jpg").toLowerCase();
+  const base = name
+    .replace(/\.(jpe?g|png|webp)$/i, "")                // drop ext
+    .normalize("NFKC")                                   // fold compat chars
+    .replace(/[\x00-\x1F\x7F-\x9F]/g, "")               // C0/C1 controls
+    .replace(/[؜‎‏‪-‮⁦-⁩​-‍﻿]/g, "") // bidi/ZW
+    .replace(/[^A-Za-z0-9._-]+/g, "_")                   // ASCII filename only
+    .replace(/_+/g, "_")
+    .replace(/^[._-]+|[._-]+$/g, "")                     // trim
+    .slice(0, 64);                                       // length cap
+  const safe = base || "photo";
+  return `${safe}${ext}`;
+}
+
 export default function TrailPhotos({ trailSlug }: { trailSlug: string }) {
   const { t } = useI18n();
   const { user } = useAuth();
@@ -94,7 +114,8 @@ export default function TrailPhotos({ trailSlug }: { trailSlug: string }) {
       userId = data.user.id;
     }
 
-    const storagePath = `${trailSlug}/${Date.now()}-${file.name}`;
+    const cleanName = sanitizeFilename(file.name);
+    const storagePath = `${trailSlug}/${Date.now()}-${cleanName}`;
     const { error: storageError } = await supabase.storage
       .from(BUCKET)
       .upload(storagePath, file, { upsert: false });

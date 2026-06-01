@@ -38,6 +38,27 @@ function daysAgo(dateStr: string): number {
   return Math.floor(ms / 86_400_000);
 }
 
+type ConditionKind = ConditionType;
+
+/**
+ * Compute the modal (most common) condition across the supplied rows.
+ * Rows are expected to be ordered newest-first, so iterating in order and
+ * using strict `>` naturally prefers the more recent value on ties — the
+ * earlier (more recent) entry establishes `bestN` first, and a later tie
+ * cannot dethrone it.
+ */
+function aggregateCondition(rows: ConditionRow[]): { value: ConditionKind; n: number } | null {
+  if (rows.length === 0) return null;
+  const counts = new Map<ConditionKind, number>();
+  for (const r of rows) counts.set(r.condition, (counts.get(r.condition) ?? 0) + 1);
+  let best: ConditionKind = rows[0].condition;
+  let bestN = 0;
+  for (const [k, n] of counts) {
+    if (n > bestN) { best = k; bestN = n; }
+  }
+  return { value: best, n: rows.length };
+}
+
 function AgoLabel({ dateStr, t }: { dateStr: string; t: ReturnType<typeof useI18n>["t"] }) {
   const days = daysAgo(dateStr);
   return <span>{days === 0 ? t.conditionToday : interp(t.conditionReportedAgo, { days })}</span>;
@@ -73,8 +94,15 @@ export default function ConditionReport({ trailSlug }: { trailSlug: string }) {
     return null;
   }
 
-  const latest = conditions[0] ?? null;
-  const recentList = conditions.slice(1, 3);
+  // Aggregate over the most recent 10 reports within the last 14 days for
+  // the headline status — a single fresh report shouldn't override a wall
+  // of contrary signal from the days prior.
+  const fourteenDaysAgoMs = Date.now() - 14 * 86_400_000;
+  const recentForAggregate = conditions
+    .filter((c) => new Date(c.reported_at).getTime() >= fourteenDaysAgoMs)
+    .slice(0, 10);
+  const aggregate = aggregateCondition(recentForAggregate);
+  const recentList = conditions.slice(0, 3);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -132,17 +160,19 @@ export default function ConditionReport({ trailSlug }: { trailSlug: string }) {
 
   return (
     <div className="mt-3">
-      {/* Latest condition badge */}
-      {latest ? (
+      {/* Aggregate condition badge (mode over up to 10 reports in the last 14 days) */}
+      {aggregate ? (
         <div className="mb-3">
           <span
             className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium"
-            style={{ background: CONDITION_COLORS[latest.condition as ConditionType] + "22", color: CONDITION_COLORS[latest.condition as ConditionType] }}
+            style={{ background: CONDITION_COLORS[aggregate.value] + "22", color: CONDITION_COLORS[aggregate.value] }}
           >
-            <span>{CONDITION_ICONS[latest.condition as ConditionType]}</span>
-            <span>{conditionLabel(latest.condition as ConditionType, t)}</span>
-            <span className="text-xs opacity-70">— <AgoLabel dateStr={latest.reported_at} t={t} /></span>
+            <span>{CONDITION_ICONS[aggregate.value]}</span>
+            <span>{conditionLabel(aggregate.value, t)}</span>
           </span>
+          <p className="mt-1 text-xs" style={{ color: "var(--text-muted)" }}>
+            Based on {aggregate.n} recent {aggregate.n === 1 ? "report" : "reports"}
+          </p>
 
           {recentList.length > 0 && (
             <ul className="mt-2 flex flex-col gap-1">

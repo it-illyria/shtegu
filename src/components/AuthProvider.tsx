@@ -85,6 +85,13 @@ export default function AuthProvider({
   const signOut = useCallback(async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
+    // Clear shared local state so the next user on the same device doesn't inherit it.
+    // Keep shtegu_gear_checked, shtegu_alerts_dismissed, shtegu_otp_last:* alone —
+    // those are device-scoped UX, not identity data.
+    try {
+      localStorage.removeItem("shtegu_bookmarks");
+      localStorage.removeItem("shtegu_username");
+    } catch {}
   }, []);
 
   const value = useMemo<AuthContextValue>(

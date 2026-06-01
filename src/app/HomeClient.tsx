@@ -563,16 +563,24 @@ function TopRatedList({ trails }: { trails: Trail[] }) {
 
 export default function HomeClient({
   trails,
-  initialQuery = "",
 }: {
   trails: Trail[];
-  initialQuery?: string;
 }) {
-  const [query, setQuery] = useState(initialQuery);
+  const [query, setQuery] = useState("");
   const [proposeOpen, setProposeOpen] = useState(false);
   const [heroIndex, setHeroIndex] = useState(0);
   const [computedAscents, setComputedAscents] = useState<Record<string, number>>({});
   const t = useT();
+
+  // Read `?q=` from the URL on mount client-side so SSR stays query-agnostic
+  // (keeps the Vercel data cache key for `/` independent of search input).
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get("q");
+      if (q) setQuery(q);
+    } catch {}
+  }, []);
 
   // Stable key over the set of slugs that need enrichment. Avoids re-running the
   // effect whenever `trails` is a new array reference (e.g. parent re-render).

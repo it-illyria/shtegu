@@ -38,6 +38,10 @@ export function useBookmarks(): {
   // Track whether we've already migrated localStorage → DB for this user session
   const migratedRef = useRef<string | null>(null);
 
+  // Serialize DB operations per-slug to prevent rapid-tap races where two
+  // parallel IIFEs leave DB and LS divergent.
+  const inFlightRef = useRef<Map<string, Promise<unknown>>>(new Map());
+
   // Signed-in (non-anonymous) DB user — key off the ID so the effect doesn't
   // refire just because `user` is a new object reference each render.
   const signedInUserId =
@@ -102,12 +106,17 @@ export function useBookmarks(): {
 
   const toggle = useCallback(
     (slug: string) => {
+      // Compute intent from optimistic state to avoid TOCTOU races between
+      // the LS update and the DB read-then-write.
+      let wantSaved = false;
       setBookmarks((prev) => {
         const next = new Set(prev);
         if (next.has(slug)) {
           next.delete(slug);
+          wantSaved = false;
         } else {
           next.add(slug);
+          wantSaved = true;
         }
         writeLS(next);
         return next;
@@ -116,38 +125,42 @@ export function useBookmarks(): {
       // Fire-and-forget DB op for signed-in users
       if (!isSupabaseConfigured || !supabase) return;
 
-      void (async () => {
-        // Ensure we have a session (same pattern as Reviews.tsx)
-        let userId: string | null = signedInUserId;
-        if (!userId) {
-          const { data: sessionData } = await supabase!.auth.getSession();
-          userId = sessionData.session?.user?.id ?? null;
-        }
-        if (!userId) {
-          // Anonymous bookmark — already stored in localStorage; skip DB
-          return;
-        }
+      // Serialize per-slug so rapid taps can't interleave.
+      const prevOp = inFlightRef.current.get(slug) ?? Promise.resolve();
+      const op = prevOp
+        .then(async () => {
+          // Ensure we have a session (same pattern as Reviews.tsx)
+          let userId: string | null = signedInUserId;
+          if (!userId) {
+            const { data: sessionData } = await supabase!.auth.getSession();
+            userId = sessionData.session?.user?.id ?? null;
+          }
+          if (!userId) {
+            // Anonymous bookmark — already stored in localStorage; skip DB
+            return;
+          }
 
-        // Read current server state to decide insert vs delete
-        const { data: existing } = await supabase!
-          .from("saved_trails")
-          .select("trail_slug")
-          .eq("user_id", userId)
-          .eq("trail_slug", slug)
-          .maybeSingle();
-
-        if (existing) {
-          await supabase!
-            .from("saved_trails")
-            .delete()
-            .eq("user_id", userId)
-            .eq("trail_slug", slug);
-        } else {
-          await supabase!
-            .from("saved_trails")
-            .insert({ user_id: userId, trail_slug: slug });
-        }
-      })();
+          // Deterministic write based on optimistic intent — no read-then-write.
+          if (wantSaved) {
+            await supabase!
+              .from("saved_trails")
+              .upsert(
+                { user_id: userId, trail_slug: slug },
+                { onConflict: "user_id,trail_slug" },
+              );
+          } else {
+            await supabase!
+              .from("saved_trails")
+              .delete()
+              .eq("user_id", userId)
+              .eq("trail_slug", slug);
+          }
+        })
+        .catch(() => {});
+      inFlightRef.current.set(slug, op);
+      void op.finally(() => {
+        if (inFlightRef.current.get(slug) === op) inFlightRef.current.delete(slug);
+      });
     },
     [signedInUserId],
   );

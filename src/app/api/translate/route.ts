@@ -19,6 +19,10 @@ async function mapLimit<T, R>(items: T[], n: number, fn: (x: T) => Promise<R>): 
 }
 
 export async function POST(request: Request) {
+  const len = Number(request.headers.get("content-length") ?? 0);
+  if (len > 16_384) return new Response(JSON.stringify({ error: "too large" }), {
+    status: 413, headers: { "content-type": "application/json", "cache-control": "no-store" }
+  });
   let body: unknown;
   try {
     body = await request.json();

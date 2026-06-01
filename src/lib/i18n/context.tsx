@@ -60,7 +60,9 @@ export function LanguageProvider({ children, initialLang }: LanguageProviderProp
   const setLang = useCallback((l: Lang) => {
     setLangState(l);
     // Persist for 1 year; SameSite=Lax is fine for a preference cookie.
-    document.cookie = `${COOKIE_NAME}=${l};path=/;max-age=31536000;SameSite=Lax`;
+    // Add Secure on HTTPS so the cookie is never sent over plaintext.
+    const secure = typeof location !== "undefined" && location.protocol === "https:" ? ";Secure" : "";
+    document.cookie = `${COOKIE_NAME}=${l};path=/;max-age=31536000;SameSite=Lax${secure}`;
   }, []);
 
   return (
