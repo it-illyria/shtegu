@@ -60,9 +60,19 @@ create policy "trails admin delete" on public.trails
 
 -- ---------------------------------------------------------------------------
 -- RT5-H3 — Flip trail_covers view to security_invoker so caller RLS applies.
+-- Wrapped in a DO block so this migration succeeds even when the view
+-- hasn't been created yet (trail_covers lives in 0028_trail_cover.sql,
+-- which numerically comes AFTER 0025 because of the 0013 prefix-collision
+-- rename). 0031_trail_photo_cover_flag.sql rebuilds the view explicitly
+-- with `with (security_invoker = true)` — so by the time the full chain
+-- is applied, the view is invoker-secure regardless of this step.
 -- ---------------------------------------------------------------------------
 
-alter view public.trail_covers set (security_invoker = true);
+do $$ begin
+  if to_regclass('public.trail_covers') is not null then
+    execute 'alter view public.trail_covers set (security_invoker = true)';
+  end if;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- RT5-H4 — Missing DELETE policy on trail_photos (unblocks RT4-M8 trigger).
