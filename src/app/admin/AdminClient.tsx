@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { TrailProposal, TrailContribution, Difficulty } from "@/lib/types";
 import { supabase } from "@/lib/supabase";
+import en from "@/lib/i18n/en";
 
 type AlertSeverity = "info" | "warning" | "danger";
 
@@ -92,7 +93,8 @@ export default function AdminClient({ initialProposals, initialContributions }: 
       return next;
     });
     if (error) {
-      addToast(`Error: ${error.message}`, false);
+      console.error("[Admin] proposal action failed", error);
+      addToast(en.adminErrorGeneric, false);
     } else {
       setProposals((prev) => prev.filter((p) => p.id !== id));
       addToast(
@@ -118,7 +120,8 @@ export default function AdminClient({ initialProposals, initialContributions }: 
       return next;
     });
     if (error) {
-      addToast(`Error: ${error.message}`, false);
+      console.error("[Admin] contribution action failed", error);
+      addToast(en.adminErrorGeneric, false);
     } else {
       setContributions((prev) => prev.filter((c) => c.id !== id));
       addToast(
@@ -481,7 +484,11 @@ function AlertsTab({ onToast }: { onToast: (msg: string, ok: boolean) => void })
       .select("id,message_en,message_sq,severity,dismissable,starts_at,ends_at,created_at")
       .order("created_at", { ascending: false });
     setLoading(false);
-    if (error) { onToast(`Error: ${error.message}`, false); return; }
+    if (error) {
+      console.error("[Admin] alerts load failed", error);
+      onToast(en.adminErrorGeneric, false);
+      return;
+    }
     if (data) setAlerts(data as AdminAlert[]);
   }
 
@@ -499,7 +506,11 @@ function AlertsTab({ onToast }: { onToast: (msg: string, ok: boolean) => void })
       ends_at: endsAt ? new Date(endsAt).toISOString() : null,
     });
     setSaving(false);
-    if (error) { onToast(`Error: ${error.message}`, false); return; }
+    if (error) {
+      console.error("[Admin] alert create failed", error);
+      onToast(en.adminErrorGeneric, false);
+      return;
+    }
     setMessageEn(""); setMessageSq(""); setEndsAt(""); setSeverity("info"); setDismissable(true);
     onToast("Alert created.", true);
     void load();
@@ -508,7 +519,11 @@ function AlertsTab({ onToast }: { onToast: (msg: string, ok: boolean) => void })
   async function deleteAlert(id: string) {
     if (!supabase) return;
     const { error } = await supabase.from("system_alerts").delete().eq("id", id);
-    if (error) { onToast(`Error: ${error.message}`, false); return; }
+    if (error) {
+      console.error("[Admin] alert delete failed", error);
+      onToast(en.adminErrorGeneric, false);
+      return;
+    }
     onToast("Alert deleted.", true);
     setAlerts((prev) => prev.filter((a) => a.id !== id));
   }

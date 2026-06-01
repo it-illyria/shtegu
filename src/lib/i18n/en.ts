@@ -288,6 +288,7 @@ const en: Dictionary = {
   photosNone: "No photos yet — be the first!",
   photosErrorSize: "File must be under 5 MB",
   photosErrorUpload: "Upload failed",
+  photoExifStripUnsupported: "Your browser can't strip image metadata. Please use Chrome, Edge, or Safari 15.4+.",
 
   // GPX download
   downloadGpx: "Download GPX",
@@ -314,6 +315,13 @@ const en: Dictionary = {
   activityNone: "No hikes logged yet. Start exploring!",
   activitySignInPrompt: "Sign in to track your hikes and see your stats.",
   activityDelete: "Delete",
+  activityErrorFail: "Could not save activity. Please try again.",
+
+  // Admin
+  adminErrorGeneric: "Operation failed — see console for details.",
+
+  // Auth (additional)
+  authSendFailed: "Could not send the link. Please try again later.",
 
   // Gear checklist
   gearHeading: "Gear Checklist",

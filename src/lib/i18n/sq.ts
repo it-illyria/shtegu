@@ -289,6 +289,7 @@ const sq: Dictionary = {
   photosNone: "Ende nuk ka foto — bëhu i pari!",
   photosErrorSize: "Skedari duhet të jetë nën 5 MB",
   photosErrorUpload: "Ngarkimi dështoi",
+  photoExifStripUnsupported: "Shfletuesi juaj nuk mund të heqë metadatat e imazhit. Përdorni Chrome, Edge ose Safari 15.4+.",
 
   // GPX download
   downloadGpx: "Shkarko GPX",
@@ -315,6 +316,13 @@ const sq: Dictionary = {
   activityNone: "Nuk keni regjistrime. Filloni të eksploroni!",
   activitySignInPrompt: "Hyni për të gjurmuar ekspeditat tuaja.",
   activityDelete: "Fshi",
+  activityErrorFail: "Nuk mund të ruhej aktiviteti. Provojeni përsëri.",
+
+  // Admin
+  adminErrorGeneric: "Veprimi dështoi — shihni konsolën për detaje.",
+
+  // Auth (additional)
+  authSendFailed: "Lidhja nuk mund të dërgohej. Provojeni më vonë.",
 
   // Gear checklist
   gearHeading: "Lista e Pajisjeve",

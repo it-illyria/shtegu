@@ -14,6 +14,27 @@ const BUCKET = "trail-photos";
 const MAX_BYTES = 4 * 1024 * 1024; // 4 MB
 const MAX_DISPLAY = 8;
 
+function safeRandomId(): string {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID().slice(0, 12);
+    }
+    if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+      const bytes = new Uint8Array(8);
+      crypto.getRandomValues(bytes);
+      return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("").slice(0, 12);
+    }
+  } catch {}
+  // Last-ditch fallback (non-cryptographic). Acceptable here because the path
+  // also includes the user's auth uid + sanitized filename; this is only a
+  // bucket-key uniqueness aid, not a security boundary.
+  return (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)).slice(0, 12);
+}
+
+class ExifStripUnsupportedError extends Error {
+  constructor() { super("ExifStripUnsupported"); this.name = "ExifStripUnsupportedError"; }
+}
+
 interface PhotoRow {
   id: string;
   storage_path: string;
@@ -34,8 +55,9 @@ function photoUrl(path: string): string {
 // filename portion of trail_photos.storage_path.
 // Strip EXIF (including GPS) metadata by re-encoding through a canvas before
 // upload. The bitmap pipeline drops all non-pixel metadata. If decoding fails
-// (e.g. unsupported format on older browsers), fall through to the original
-// file — the bucket MIME allowlist still constrains what can land.
+// (e.g. unsupported format on older browsers), throw ExifStripUnsupportedError
+// so the caller can surface a clear message rather than silently uploading
+// metadata-bearing originals.
 async function stripExif(file: File): Promise<File> {
   if (!file.type.startsWith("image/")) return file;
   try {
@@ -44,16 +66,16 @@ async function stripExif(file: File): Promise<File> {
     canvas.width = bmp.width;
     canvas.height = bmp.height;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
+    if (!ctx) throw new ExifStripUnsupportedError();
     ctx.drawImage(bmp, 0, 0);
     bmp.close();
     const blob: Blob | null = await new Promise((res) =>
       canvas.toBlob((b) => res(b), file.type, 0.92),
     );
-    if (!blob) return file;
+    if (!blob) throw new ExifStripUnsupportedError();
     return new File([blob], file.name, { type: file.type, lastModified: Date.now() });
   } catch {
-    return file;
+    throw new ExifStripUnsupportedError();
   }
 }
 
@@ -125,8 +147,20 @@ export default function TrailPhotos({ trailSlug }: { trailSlug: string }) {
 
     // Strip EXIF (GPS, camera serial, timestamps) before anything touches the
     // network. Done first so the sanitized name + size both reflect the
-    // re-encoded file.
-    const file = await stripExif(rawFile);
+    // re-encoded file. If the browser can't re-encode, fail loudly rather than
+    // upload an original with embedded GPS.
+    let file: File;
+    try {
+      file = await stripExif(rawFile);
+    } catch (err) {
+      if (err instanceof ExifStripUnsupportedError) {
+        setError(t.photoExifStripUnsupported);
+      } else {
+        setError(t.photosErrorUpload);
+      }
+      setUploading(false);
+      return;
+    }
 
     // Ensure we have a session (anonymous if needed)
     let userId = user?.id;
@@ -147,7 +181,7 @@ export default function TrailPhotos({ trailSlug }: { trailSlug: string }) {
     const cleanName = sanitizeFilename(file.name);
     // Random suffix (not Date.now()) so storage paths aren't enumerable by
     // guessing timestamps. 12 hex chars from a UUID = ~48 bits of entropy.
-    const randomId = (globalThis.crypto as Crypto).randomUUID().slice(0, 12);
+    const randomId = safeRandomId();
     const storagePath = `${trailSlug}/${randomId}-${cleanName}`;
     const { error: storageError } = await supabase.storage
       .from(BUCKET)

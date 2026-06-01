@@ -104,7 +104,7 @@ export default function Reviews({ trailSlug }: { trailSlug: string }) {
       else setMessage(t.reviewsErrorFail);
       return setStatus("error");
     }
-    localStorage.setItem("shtegu_last_review", String(Date.now()));
+    try { localStorage.setItem("shtegu_last_review", String(Date.now())); } catch {}
     setBody(""); setMessage(null); setStatus("idle");
     await load();
   }

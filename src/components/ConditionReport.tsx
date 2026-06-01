@@ -142,7 +142,7 @@ export default function ConditionReport({ trailSlug }: { trailSlug: string }) {
       return setStatus("error");
     }
 
-    localStorage.setItem(rateKey, String(Date.now()));
+    try { localStorage.setItem(rateKey, String(Date.now())); } catch {}
     setSelected(null);
     setNotes("");
     setMessage(null);

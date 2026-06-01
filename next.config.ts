@@ -141,6 +141,21 @@ const nextConfig: NextConfig = {
           { key: "Service-Worker-Allowed", value: "/" },
         ],
       },
+      // Authed pages: never cache user-private content at the browser or any
+      // shared/CDN cache. Prevents bfcache replay of admin/activity/saved
+      // pages after sign-out, and stops Vercel's edge from caching them.
+      {
+        source: "/admin/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }],
+      },
+      {
+        source: "/activity/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }],
+      },
+      {
+        source: "/saved/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store, max-age=0" }],
+      },
     ];
   },
 };

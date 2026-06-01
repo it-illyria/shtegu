@@ -52,7 +52,7 @@ export default function FeedbackForm() {
         body: JSON.stringify({ kind, message: message.trim(), email: email.trim() || undefined }),
       });
       if (!res.ok) throw new Error(await res.text());
-      localStorage.setItem("shtegu_last_feedback", String(Date.now()));
+      try { localStorage.setItem("shtegu_last_feedback", String(Date.now())); } catch {}
       setStatus("done");
     } catch {
       setError(t.feedbackErrorFail);

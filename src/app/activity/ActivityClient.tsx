@@ -142,7 +142,8 @@ function ActivityInner({ trails }: { trails: Trail[] }) {
       notes: notes.trim() || null,
     });
     if (error) {
-      setFormError(error.message);
+      console.error("[ActivityClient] insert failed", error);
+      setFormError(t.activityErrorFail);
       setSubmitting(false);
       return;
     }

@@ -82,7 +82,12 @@ export default function AuthButton({ compact = false }: Props) {
     setStatus("sending");
     setError(null);
     const { error: err } = await signInWithEmail(trimmed);
-    if (err) { setError(err); setStatus("error"); return; }
+    if (err) {
+      console.warn("[AuthButton] OTP send failed", err);
+      setError(t.authSendFailed);
+      setStatus("error");
+      return;
+    }
     markSendTs(trimmed);
     setCooldownLeft(Math.ceil(COOLDOWN_MS / 1000));
     setStatus("sent");

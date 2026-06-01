@@ -71,12 +71,14 @@ export default function AuthProvider({
   // `storage` event that this tab otherwise misses until the next reload.
   useEffect(() => {
     if (!supabase) return;
-    const ref = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(/https?:\/\/([^.]+)/)?.[1];
-    const tokenKey = ref ? `sb-${ref}-auth-token` : null;
-    if (!tokenKey) return;
     function onStorage(e: StorageEvent) {
-      if (e.key !== tokenKey) return;
-      void supabase!.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null));
+      // Match any Supabase auth-token key. The project ref isn't always
+      // derivable from window-set NEXT_PUBLIC_SUPABASE_URL (custom domains,
+      // CNAMEs), so we identify by pattern.
+      if (!e.key || !/^sb-[a-z0-9]+-auth-token$/.test(e.key)) return;
+      void supabase!.auth.getSession().then(({ data }) => {
+        setUser(data.session?.user ?? null);
+      });
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);

@@ -293,6 +293,7 @@ export interface Dictionary {
   photosNone: string;
   photosErrorSize: string;
   photosErrorUpload: string;
+  photoExifStripUnsupported: string;
 
   // GPX download
   downloadGpx: string;
@@ -319,6 +320,13 @@ export interface Dictionary {
   activityNone: string;
   activitySignInPrompt: string;
   activityDelete: string;
+  activityErrorFail: string;
+
+  // Admin
+  adminErrorGeneric: string;
+
+  // Auth (additional)
+  authSendFailed: string;
 
   // Gear checklist
   gearHeading: string;
